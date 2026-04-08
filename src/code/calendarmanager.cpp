@@ -821,7 +821,9 @@ void CalendarManager::deleteCollection(qint64 collectionId)
 }
 
 void CalendarManager::editCollection(qint64 collectionId)
-{ // TODO: Reimplement this dialog in QML
+{
+    Q_UNUSED(collectionId)
+    // TODO: Reimplement this dialog in QML
     // auto collection = m_calendar->collection(collectionId);
     // QPointer<Akonadi::CollectionPropertiesDialog> dlg = new Akonadi::CollectionPropertiesDialog(collection);
     // dlg->setWindowTitle(i18nc("@title:window", "Properties of Calendar %1", collection.name()));

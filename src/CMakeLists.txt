@@ -21,7 +21,10 @@ set(lib_HDRS
 
 target_sources(MauiKitCalendar${MAUI_MAJOR_VERSION}
     PRIVATE
-    
+
+    code/plugin.cpp
+    code/plugin.h
+
     code/moduleinfo.cpp
     code/moduleinfo.h
     
@@ -82,6 +85,8 @@ ecm_target_qml_sources(MauiKitCalendar${MAUI_MAJOR_VERSION} SOURCES
     controls.${QT_MAJOR_VERSION}/TimePicker.qml)
 
 add_library(MauiKit${MAUI_MAJOR_VERSION}::Calendar ALIAS MauiKitCalendar${MAUI_MAJOR_VERSION})
+
+target_compile_options(MauiKitCalendar${MAUI_MAJOR_VERSION} PRIVATE -Wno-missing-include-dirs)
 
 generate_export_header(MauiKitCalendar${MAUI_MAJOR_VERSION} BASE_NAME Calendar)
 set_target_properties(MauiKitCalendar${MAUI_MAJOR_VERSION} PROPERTIES
