@@ -8,6 +8,7 @@
 #include <memory>
 #include <qobjectdefs.h>
 #include <QQmlEngine>
+#include "calendar_export.h"
 
 namespace Akonadi
 {
@@ -40,7 +41,7 @@ class CollectionComboBoxModelPrivate;
  *
  * @author Carl Schwan <carl@carlschwan.eu>
  */
-class CollectionComboBoxModel : public QSortFilterProxyModel
+class CALENDAR_EXPORT CollectionComboBoxModel : public QSortFilterProxyModel
 {
     Q_OBJECT
     QML_ELEMENT

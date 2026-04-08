@@ -3,10 +3,11 @@
 
 #include <QObject>
 #include <QQmlEngine>
+#include "calendar_export.h"
 /**
  * This class is used to enable cross-compatible filtering of data in models.
  */
-class Filter : public QObject
+class CALENDAR_EXPORT Filter : public QObject
 {
     Q_OBJECT
     QML_ELEMENT

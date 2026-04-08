@@ -58,5 +58,4 @@ void MauiCalendarPlugin::registerTypes(const char *uri)
     qRegisterMetaType<Akonadi::AgentFilterProxyModel *>();
 }
 
-#include "plugin.moc"
 #include "moc_plugin.cpp"

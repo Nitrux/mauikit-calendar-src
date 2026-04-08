@@ -123,6 +123,13 @@ target_link_libraries(MauiKitCalendar${MAUI_MAJOR_VERSION}
 target_link_libraries(MauiKitCalendar${MAUI_MAJOR_VERSION} PRIVATE
     KPim${KF_MAJOR_VERSION}::AkonadiContactCore)
 
+target_link_libraries(MauiKitCalendar${MAUI_MAJOR_VERSION}plugin
+    PRIVATE
+    MauiKitCalendar${MAUI_MAJOR_VERSION}
+    kalendar_lib
+    KPim${KF_MAJOR_VERSION}::AkonadiContactCore
+    Qt${QT_MAJOR_VERSION}::Qml)
+
 ecm_finalize_qml_module(MauiKitCalendar${MAUI_MAJOR_VERSION} DESTINATION ${KDE_INSTALL_QMLDIR})
 
 install(TARGETS MauiKitCalendar${MAUI_MAJOR_VERSION} EXPORT MauiKitCalendar${MAUI_MAJOR_VERSION}Targets ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})

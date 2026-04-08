@@ -18,6 +18,7 @@
 #include <QByteArray>
 #include <QObject>
 #include <QQmlEngine>
+#include "calendar_export.h"
 /**
  * This class is a wrapper for a KCalendarCore::Incidence::Ptr object.
  * We can use it to create new incidences, or create incidence pointers from
@@ -26,7 +27,7 @@
  * adding and editing the incidence in the collection of our choice.
  */
 
-class IncidenceWrapper : public QObject, public Akonadi::ItemMonitor
+class CALENDAR_EXPORT IncidenceWrapper : public QObject, public Akonadi::ItemMonitor
 {
     Q_OBJECT
     QML_ELEMENT

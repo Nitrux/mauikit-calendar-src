@@ -19,6 +19,7 @@
 #include <QList>
 #include <QSharedPointer>
 #include <QTimer>
+#include "calendar_export.h"
 
 class Filter;
 namespace KCalendarCore
@@ -37,7 +38,7 @@ using namespace KCalendarCore;
  *
  * Recurrences are expanded
  */
-class IncidenceOccurrenceModel : public QAbstractListModel
+class CALENDAR_EXPORT IncidenceOccurrenceModel : public QAbstractListModel
 {
     Q_OBJECT
     QML_ELEMENT

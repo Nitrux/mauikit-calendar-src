@@ -10,6 +10,7 @@
 #include <QSharedPointer>
 #include <QTimer>
 #include <QQmlEngine>
+#include "calendar_export.h"
 
 namespace KCalendarCore
 {
@@ -21,7 +22,7 @@ class Incidence;
  * The "incidences" roles provides a list of lists, where each list represents a visual line,
  * containing a number of events to display.
  */
-class HourlyIncidenceModel : public QAbstractItemModel
+class CALENDAR_EXPORT HourlyIncidenceModel : public QAbstractItemModel
 {
     Q_OBJECT
     QML_ELEMENT

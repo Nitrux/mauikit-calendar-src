@@ -4,11 +4,12 @@
 
 #include <QObject>
 #include <QQmlEngine>
+#include "calendar_export.h"
 namespace Akonadi
 {
 namespace Quick
 {
-class MimeTypes : public QObject
+class CALENDAR_EXPORT MimeTypes : public QObject
 {
     Q_OBJECT
     QML_ELEMENT

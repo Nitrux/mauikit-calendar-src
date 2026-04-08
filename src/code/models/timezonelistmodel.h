@@ -6,8 +6,9 @@
 #include <QAbstractListModel>
 #include <QVector>
 #include <QQmlEngine>
+#include "calendar_export.h"
 
-class TimeZoneListModel : public QAbstractListModel
+class CALENDAR_EXPORT TimeZoneListModel : public QAbstractListModel
 {
     Q_OBJECT
     QML_ELEMENT

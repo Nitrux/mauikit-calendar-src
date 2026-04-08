@@ -12,6 +12,7 @@
 #include <QList>
 #include <QSharedPointer>
 #include <QTimer>
+#include "calendar_export.h"
 //#include <kalendarconfig.h>
 
 namespace KCalendarCore
@@ -24,7 +25,7 @@ class Incidence;
  * The "incidences" roles provides a list of lists, where each list represents a visual line,
  * containing a number of events to display.
  */
-class MultiDayIncidenceModel : public QAbstractItemModel
+class CALENDAR_EXPORT MultiDayIncidenceModel : public QAbstractItemModel
 {
     Q_OBJECT
     Q_PROPERTY(int periodLength READ periodLength WRITE setPeriodLength NOTIFY periodLengthChanged)

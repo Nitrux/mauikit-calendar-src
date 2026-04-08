@@ -8,9 +8,10 @@
 #include <QLocale>
 #include <QQmlEngine>
 #include <memory>
+#include "calendar_export.h"
 
 /// Month model exposing month days and events to a QML view.
-class MonthModel : public QAbstractListModel
+class CALENDAR_EXPORT MonthModel : public QAbstractListModel
 {
     Q_OBJECT
     QML_ELEMENT

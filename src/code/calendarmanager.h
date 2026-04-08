@@ -20,6 +20,7 @@
 #include <KConfigWatcher>
 #include <QObject>
 #include <akonadi-calendar_version.h>
+#include "calendar_export.h"
 
 class IncidenceWrapper;
 
@@ -35,7 +36,7 @@ class QAbstractProxyModel;
 class QAbstractItemModel;
 class ColorProxyModel;
 
-class CalendarManager : public QObject
+class CALENDAR_EXPORT CalendarManager : public QObject
 {
     Q_OBJECT
     QML_ELEMENT

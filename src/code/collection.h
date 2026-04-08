@@ -5,12 +5,13 @@
 #include <QObject>
 #include <QQmlEngine>
 #include <Akonadi/EntityTreeModel>
+#include "calendar_export.h"
 
 namespace Akonadi
 {
 namespace Quick
 {
-class Collection : public QObject
+class CALENDAR_EXPORT Collection : public QObject
 {
     Q_OBJECT
     QML_ELEMENT

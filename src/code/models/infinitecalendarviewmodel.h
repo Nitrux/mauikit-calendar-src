@@ -8,8 +8,9 @@
 #include <Akonadi/ETMCalendar>
 #include <QLocale>
 #include <QQmlEngine>
+#include "calendar_export.h"
 
-class InfiniteCalendarViewModel : public QAbstractListModel
+class CALENDAR_EXPORT InfiniteCalendarViewModel : public QAbstractListModel
 {
     Q_OBJECT
     QML_ELEMENT
