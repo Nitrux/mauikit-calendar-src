@@ -19,11 +19,13 @@ ecm_add_qml_module(MauiKitCalendar${MAUI_MAJOR_VERSION}
 set(lib_HDRS
     code/moduleinfo.h)
 
+target_sources(MauiKitCalendar${MAUI_MAJOR_VERSION}plugin
+    PRIVATE
+    code/plugin.cpp
+    code/plugin.h)
+
 target_sources(MauiKitCalendar${MAUI_MAJOR_VERSION}
     PRIVATE
-
-    code/plugin.cpp
-    code/plugin.h
 
     code/moduleinfo.cpp
     code/moduleinfo.h
