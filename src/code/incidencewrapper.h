@@ -3,59 +3,47 @@
 
 #pragma once
 
-#include "calendarmanager.h"
 #include "models/attachmentsmodel.h"
 #include "models/attendeesmodel.h"
 #include "models/recurrenceexceptionsmodel.h"
 
-#include <Akonadi/CollectionIdentificationAttribute>
-#include <Akonadi/Item>
-#include <Akonadi/ItemFetchJob>
-#include <Akonadi/ItemFetchScope>
-#include <Akonadi/ItemMonitor>
-#include <KCalUtils/RecurrenceActions>
 #include <KFormat>
 #include <QByteArray>
 #include <QObject>
 #include <QQmlEngine>
 #include "calendar_export.h"
+
 /**
  * This class is a wrapper for a KCalendarCore::Incidence::Ptr object.
- * We can use it to create new incidences, or create incidence pointers from
- * pre-existing incidences, to more cleanly pass around to our QML code
- * or to the CalendarManager, which handles the back-end stuff of
- * adding and editing the incidence in the collection of our choice.
+ * We can use it to create new incidences, or wrap pre-existing incidences,
+ * to more cleanly pass around to QML or to CalendarManager.
  */
 
-class CALENDAR_EXPORT IncidenceWrapper : public QObject, public Akonadi::ItemMonitor
+class CALENDAR_EXPORT IncidenceWrapper : public QObject
 {
     Q_OBJECT
     QML_ELEMENT
-    
-    // Akonadi properties
-    Q_PROPERTY(Akonadi::Item incidenceItem READ incidenceItem WRITE setIncidenceItem NOTIFY incidenceItemChanged)
+
     Q_PROPERTY(qint64 collectionId READ collectionId WRITE setCollectionId NOTIFY collectionIdChanged)
-    
-    // Incidence properties
+
     Q_PROPERTY(KCalendarCore::Incidence::Ptr incidencePtr READ incidencePtr WRITE setIncidencePtr NOTIFY incidencePtrChanged)
     Q_PROPERTY(KCalendarCore::Incidence::Ptr originalIncidencePtr READ originalIncidencePtr NOTIFY originalIncidencePtrChanged)
     Q_PROPERTY(int incidenceType READ incidenceType NOTIFY incidenceTypeChanged)
     Q_PROPERTY(QString incidenceTypeStr READ incidenceTypeStr NOTIFY incidenceTypeStrChanged)
     Q_PROPERTY(QString incidenceIconName READ incidenceIconName NOTIFY incidenceIconNameChanged)
-    Q_PROPERTY(QString uid READ uid CONSTANT) // TODO: This needs to not be a CONSTANT
-    
+    Q_PROPERTY(QString uid READ uid CONSTANT)
+
     Q_PROPERTY(QString parent READ parent WRITE setParent NOTIFY parentChanged)
-    Q_PROPERTY(IncidenceWrapper *parentIncidence READ parentIncidence NOTIFY parentIncidenceChanged)
     Q_PROPERTY(QVariantList childIncidences READ childIncidences NOTIFY childIncidencesChanged)
-    
+
     Q_PROPERTY(QString summary READ summary WRITE setSummary NOTIFY summaryChanged)
     Q_PROPERTY(QStringList categories READ categories WRITE setCategories NOTIFY categoriesChanged)
     Q_PROPERTY(QString description READ description WRITE setDescription NOTIFY descriptionChanged)
     Q_PROPERTY(QString location READ location WRITE setLocation NOTIFY locationChanged)
-    Q_PROPERTY(bool hasGeo READ hasGeo CONSTANT) // TODO: This needs to not be a CONSTANT
-    Q_PROPERTY(float geoLatitude READ geoLatitude CONSTANT) // TODO: This needs to not be a CONSTANT
-    Q_PROPERTY(float geoLongitude READ geoLongitude CONSTANT) // TODO: This needs to not be a CONSTANT
-    
+    Q_PROPERTY(bool hasGeo READ hasGeo CONSTANT)
+    Q_PROPERTY(float geoLatitude READ geoLatitude CONSTANT)
+    Q_PROPERTY(float geoLongitude READ geoLongitude CONSTANT)
+
     Q_PROPERTY(QDateTime incidenceStart READ incidenceStart WRITE setIncidenceStart NOTIFY incidenceStartChanged)
     Q_PROPERTY(QString incidenceStartDateDisplay READ incidenceStartDateDisplay NOTIFY incidenceStartDateDisplayChanged)
     Q_PROPERTY(QString incidenceStartTimeDisplay READ incidenceStartTimeDisplay NOTIFY incidenceStartTimeDisplayChanged)
@@ -69,23 +57,18 @@ class CALENDAR_EXPORT IncidenceWrapper : public QObject, public Akonadi::ItemMon
     Q_PROPERTY(QString durationDisplayString READ durationDisplayString NOTIFY durationDisplayStringChanged)
     Q_PROPERTY(bool allDay READ allDay WRITE setAllDay NOTIFY allDayChanged)
     Q_PROPERTY(int priority READ priority WRITE setPriority NOTIFY priorityChanged)
-    
+
     Q_PROPERTY(KCalendarCore::Recurrence *recurrence READ recurrence NOTIFY incidencePtrChanged)
     Q_PROPERTY(QVariantMap recurrenceData READ recurrenceData NOTIFY recurrenceDataChanged)
-    // Q_PROPERTY(RecurrenceExceptionsModel *recurrenceExceptionsModel READ recurrenceExceptionsModel NOTIFY recurrenceExceptionsModelChanged)
-    
-    // Q_PROPERTY(AttendeesModel *attendeesModel READ attendeesModel NOTIFY attendeesModelChanged)
+
     Q_PROPERTY(QVariantMap organizer READ organizer NOTIFY organizerChanged)
-    // Q_PROPERTY(KCalendarCore::Attendee::List attendees READ attendees NOTIFY attendeesChanged)
-    
-    // Q_PROPERTY(AttachmentsModel *attachmentsModel READ attachmentsModel NOTIFY attachmentsModelChanged)
-    
+
     Q_PROPERTY(bool todoCompleted READ todoCompleted WRITE setTodoCompleted NOTIFY todoCompletedChanged)
     Q_PROPERTY(QDateTime todoCompletionDt READ todoCompletionDt NOTIFY todoCompletionDtChanged)
     Q_PROPERTY(int todoPercentComplete READ todoPercentComplete WRITE setTodoPercentComplete NOTIFY todoPercentCompleteChanged)
-    
+
     Q_PROPERTY(QString googleConferenceUrl READ googleConferenceUrl NOTIFY googleConferenceUrlChanged)
-    
+
 public:
     enum RecurrenceIntervals {
         Daily,
@@ -94,30 +77,28 @@ public:
         Yearly,
     };
     Q_ENUM(RecurrenceIntervals)
-    
+
     enum IncidenceTypes {
         TypeEvent = KCalendarCore::IncidenceBase::TypeEvent,
         TypeTodo = KCalendarCore::IncidenceBase::TypeTodo,
         TypeJournal = KCalendarCore::IncidenceBase::TypeJournal,
     };
     Q_ENUM(IncidenceTypes)
-    
+
     enum RecurrenceActions {
-        AllOccurrences = KCalUtils::RecurrenceActions::AllOccurrences,
-        SelectedOccurrence = KCalUtils::RecurrenceActions::SelectedOccurrence,
-        FutureOccurrences = KCalUtils::RecurrenceActions::FutureOccurrences,
+        AllOccurrences = 0,
+        SelectedOccurrence = 1,
+        FutureOccurrences = 2,
     };
     Q_ENUM(RecurrenceActions)
-    
+
     typedef QSharedPointer<IncidenceWrapper> Ptr;
-    
+
     explicit IncidenceWrapper(QObject *parent = nullptr);
     ~IncidenceWrapper() override;
-    
+
     void notifyDataChanged();
-    
-    Akonadi::Item incidenceItem() const;
-    void setIncidenceItem(const Akonadi::Item &incidenceItem);
+
     KCalendarCore::Incidence::Ptr incidencePtr() const;
     KCalendarCore::Incidence::Ptr originalIncidencePtr();
     int incidenceType() const;
@@ -130,7 +111,7 @@ public:
     void setParent(QString parent);
     IncidenceWrapper *parentIncidence();
     QVariantList childIncidences();
-    
+
     QString summary() const;
     void setSummary(const QString &summary);
     QStringList categories();
@@ -142,7 +123,7 @@ public:
     bool hasGeo() const;
     float geoLatitude() const;
     float geoLongitude() const;
-    
+
     QDateTime incidenceStart() const;
     Q_INVOKABLE void setIncidenceStart(const QDateTime &incidenceStart, bool respectTimeZone = false);
     Q_INVOKABLE void setIncidenceStartDate(int day, int month, int year);
@@ -166,24 +147,24 @@ public:
     void setAllDay(bool allDay);
     int priority() const;
     void setPriority(int priority);
-    
+
     KCalendarCore::Recurrence *recurrence() const;
     QVariantMap recurrenceData();
     Q_INVOKABLE void setRecurrenceDataItem(const QString &key, const QVariant &value);
-    
+
     QVariantMap organizer();
     KCalendarCore::Attendee::List attendees() const;
-    
+
     AttendeesModel *attendeesModel();
     RecurrenceExceptionsModel *recurrenceExceptionsModel();
     AttachmentsModel *attachmentsModel();
-    
+
     bool todoCompleted();
     void setTodoCompleted(bool completed);
     QDateTime todoCompletionDt();
     int todoPercentComplete();
     void setTodoPercentComplete(int todoPercentComplete);
-    
+
     Q_INVOKABLE void triggerEditMode();
     Q_INVOKABLE void setNewEvent();
     Q_INVOKABLE void setNewTodo();
@@ -192,12 +173,10 @@ public:
     Q_INVOKABLE void setMonthlyPosRecurrence(short pos, int day);
     Q_INVOKABLE void setRecurrenceOccurrences(int occurrences);
     Q_INVOKABLE void clearRecurrences();
-    
-    Q_INVOKABLE void setCollection(const Akonadi::Collection &collection);
-    
+
     QString googleConferenceUrl();
+
 Q_SIGNALS:
-    void incidenceItemChanged();
     void incidencePtrChanged(KCalendarCore::Incidence::Ptr incidencePtr);
     void originalIncidencePtrChanged();
     void incidenceTypeChanged();
@@ -207,12 +186,12 @@ Q_SIGNALS:
     void parentChanged();
     void parentIncidenceChanged();
     void childIncidencesChanged();
-    
+
     void summaryChanged();
     void categoriesChanged();
     void descriptionChanged();
     void locationChanged();
-    
+
     void incidenceStartChanged();
     void incidenceStartDateDisplayChanged();
     void incidenceStartTimeDisplayChanged();
@@ -226,37 +205,30 @@ Q_SIGNALS:
     void durationDisplayStringChanged();
     void allDayChanged();
     void priorityChanged();
-    
+
     void recurrenceDataChanged();
     void organizerChanged();
     void attendeesModelChanged();
     void recurrenceExceptionsModelChanged();
     void attachmentsModelChanged();
-    
+
     void todoCompletedChanged();
     void todoCompletionDtChanged();
     void todoPercentCompleteChanged();
-    // void attendeesChanged();
-    
+
     void googleConferenceUrlChanged();
-    
-protected:
-    void itemChanged(const Akonadi::Item &item) override;
-    
+
 private:
     void setIncidencePtr(KCalendarCore::Incidence::Ptr incidencePtr);
     void setNewIncidence(KCalendarCore::Incidence::Ptr incidence);
     void updateParentIncidence();
     void resetChildIncidences();
     void cleanupChildIncidences();
-    
+
     KCalendarCore::Incidence::Ptr m_incidence;
     KCalendarCore::Incidence::Ptr m_originalIncidence;
-    qint64 m_collectionId = -1; // For when we want to edit, this is temporary
-    // AttendeesModel m_attendeesModel;
-    // RecurrenceExceptionsModel m_recurrenceExceptionsModel;
-    // AttachmentsModel m_attachmentsModel;
-    
+    qint64 m_collectionId = 0;
+
     KFormat m_format;
     Ptr m_parentIncidence;
     QVariantList m_childIncidences;

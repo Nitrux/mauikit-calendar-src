@@ -7,37 +7,22 @@
 
 #pragma once
 
-#include <QObject>
-#include <QQmlEngine>
-#include <Akonadi/ETMCalendar>
-
-#include <KConfigWatcher>
-#include <KFormat>
 #include <QAbstractItemModel>
 #include <QColor>
 #include <QDateTime>
 #include <QList>
+#include <QObject>
+#include <QQmlEngine>
 #include <QSharedPointer>
 #include <QTimer>
+
+#include <KCalendarCore/MemoryCalendar>
+#include <KFormat>
+
 #include "calendar_export.h"
 
 class Filter;
-namespace KCalendarCore
-{
-class Incidence;
-}
-namespace Akonadi
-{
-class ETMCalendar;
-}
 
-using namespace KCalendarCore;
-
-/**
- * Loads all event occurrences within the given period and matching the given filter.
- *
- * Recurrences are expanded
- */
 class CALENDAR_EXPORT IncidenceOccurrenceModel : public QAbstractListModel
 {
     Q_OBJECT
@@ -45,7 +30,6 @@ class CALENDAR_EXPORT IncidenceOccurrenceModel : public QAbstractListModel
     Q_PROPERTY(QDate start READ start WRITE setStart NOTIFY startChanged)
     Q_PROPERTY(int length READ length WRITE setLength NOTIFY lengthChanged)
     Q_PROPERTY(Filter *filter READ filter WRITE setFilter NOTIFY filterChanged)
-    Q_PROPERTY(Akonadi::ETMCalendar::Ptr calendar READ calendar WRITE setCalendar NOTIFY calendarChanged)
     Q_PROPERTY(bool loading READ loading NOTIFY loadingChanged)
     Q_PROPERTY(int resetThrottleInterval READ resetThrottleInterval WRITE setResetThrottleInterval NOTIFY resetThrottleIntervalChanged)
 
@@ -76,14 +60,14 @@ public:
         LastRole
     };
     Q_ENUM(Roles)
+
     explicit IncidenceOccurrenceModel(QObject *parent = nullptr);
     ~IncidenceOccurrenceModel() override = default;
 
     int rowCount(const QModelIndex &parent = {}) const override;
     QVariant data(const QModelIndex &index, int role) const override;
     QHash<int, QByteArray> roleNames() const override;
-    
-    Akonadi::ETMCalendar::Ptr calendar() const;
+
     QDate start() const;
     int length() const;
     Filter *filter() const;
@@ -103,7 +87,6 @@ Q_SIGNALS:
     void startChanged();
     void lengthChanged();
     void filterChanged();
-    void calendarChanged();
     void loadingChanged();
     void resetThrottleIntervalChanged();
 
@@ -111,17 +94,11 @@ public Q_SLOTS:
     void setStart(const QDate &start);
     void setLength(int length);
     void setFilter(Filter *filter);
-    void setCalendar(Akonadi::ETMCalendar::Ptr calendar);
     void setResetThrottleInterval(const int resetThrottleInterval);
 
 private Q_SLOTS:
-    void loadColors();
     void scheduleReset();
     void resetFromSource();
-
-    void slotSourceDataChanged(const QModelIndex &upperLeft, const QModelIndex &bottomRight);
-    void slotSourceRowsInserted(const QModelIndex &parent, const int first, const int last);
-
     void setLoading(const bool loading);
 
 private:
@@ -129,23 +106,15 @@ private:
     static uint incidenceOccurrenceHash(const QDateTime &ocStart, const QDateTime &ocEnd, const QString &incidenceUid);
     bool incidencePassesFilter(const KCalendarCore::Incidence::Ptr &incidence);
 
-    QColor getColor(const KCalendarCore::Incidence::Ptr &incidence);
-    qint64 getCollectionId(const KCalendarCore::Incidence::Ptr &incidence);
-
-    QSharedPointer<QAbstractItemModel> mSourceModel;
     QDate mStart;
     QDate mEnd;
     int mLength{0};
-    Akonadi::ETMCalendar::Ptr m_coreCalendar;
 
     QTimer m_resetThrottlingTimer;
     int m_resetThrottleInterval = 100;
 
     bool m_loading = false;
-    QVector<Occurrence> m_incidences; // We need incidences to be in a preditable order for the model
-    QHash<uint, QPersistentModelIndex> m_occurrenceIndexHash;
-    QHash<QString, QColor> m_colors;
-    KConfigWatcher::Ptr m_colorWatcher;
+    QVector<Occurrence> m_incidences;
     Filter *mFilter = nullptr;
     KFormat m_format;
 };

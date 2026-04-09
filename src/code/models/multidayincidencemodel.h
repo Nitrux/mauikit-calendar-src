@@ -28,6 +28,7 @@ class Incidence;
 class CALENDAR_EXPORT MultiDayIncidenceModel : public QAbstractItemModel
 {
     Q_OBJECT
+    QML_ELEMENT
     Q_PROPERTY(int periodLength READ periodLength WRITE setPeriodLength NOTIFY periodLengthChanged)
     Q_PROPERTY(MultiDayIncidenceModel::Filters filters READ filters WRITE setFilters NOTIFY filtersChanged)
     Q_PROPERTY(int incidenceCount READ incidenceCount NOTIFY incidenceCountChanged)

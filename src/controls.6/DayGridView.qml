@@ -221,7 +221,6 @@ QQC2.Pane
                                                     {
                                                         start: gridItem.date
                                                         length: 0
-                                                        calendar: Kalendar.CalendarManager.calendar
                                                         filter: Kalendar.Filter
                                                     }
 

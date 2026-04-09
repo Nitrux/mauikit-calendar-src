@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
 #include "incidenceoccurrencemodel.h"
-#include <Akonadi/EntityTreeModel>
 #include <QMetaEnum>
 #include <cmath>
 #include <models/infinitecalendarviewmodel.h>
@@ -289,7 +288,4 @@ void InfiniteCalendarViewModel::setScale(int scale)
 
     endResetModel();
 }
-
-#include "infinitecalendarviewmodel.moc"
-#include "moc_infinitecalendarviewmodel.cpp"
 

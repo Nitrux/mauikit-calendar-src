@@ -14,12 +14,6 @@ set(KF_MAJOR_VERSION 6)
 set(MAUI_MAJOR_VERSION 4)
 set(MAUIKIT_VERSION 4.0.2)
 
-set(AKONADI_LIB_VERSION "5.240.81")
-set(AKONADICALENDAR_LIB_VERSION "5.240.81")
-set(AKONADI_CONTACT_VERSION "5.240.81")
-set(AKONADIMIME_LIB_VERSION "5.240.81")
-set(CALENDARUTILS_LIB_VERSION "5.240.81")
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -35,7 +29,6 @@ find_package(ECM ${REQUIRED_KF_VERSION} REQUIRED NO_MODULE)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ECM_MODULE_PATH})
 
 include(GenerateExportHeader)
-include(GNUInstallDirs)
 include(FeatureSummary)
 include(CMakePackageConfigHelpers)
 
@@ -57,20 +50,13 @@ find_package(Qt${QT_MAJOR_VERSION} ${REQUIRED_QT_VERSION} REQUIRED COMPONENTS
     QuickControls2
     Svg)
 
-find_package(Qt6Core5Compat REQUIRED)
-
 find_package(KF${KF_MAJOR_VERSION} ${REQUIRED_KF_VERSION} REQUIRED COMPONENTS
     I18n
     CoreAddons
-    Config)
+    Config
+    CalendarCore)
 
 find_package(MauiKit${MAUI_MAJOR_VERSION} ${MAUIKIT_VERSION} REQUIRED)
-
-find_package(KPim${KF_MAJOR_VERSION}Akonadi ${AKONADI_LIB_VERSION} REQUIRED)
-find_package(KPim${KF_MAJOR_VERSION}AkonadiCalendar ${AKONADICALENDAR_LIB_VERSION} REQUIRED)
-find_package(KPim${KF_MAJOR_VERSION}AkonadiContactCore ${AKONADI_CONTACT_VERSION} REQUIRED)
-find_package(KPim${KF_MAJOR_VERSION}AkonadiMime ${AKONADIMIME_LIB_VERSION} REQUIRED)
-find_package(KPim${KF_MAJOR_VERSION}CalendarUtils ${CALENDARUTILS_LIB_VERSION} REQUIRED)
 
 if(${ECM_SOURCE_UNDER_VERSION_CONTROL})
     execute_process(
@@ -79,7 +65,6 @@ if(${ECM_SOURCE_UNDER_VERSION_CONTROL})
         OUTPUT_VARIABLE GIT_BRANCH
         OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-    # Get the latest abbreviated commit hash of the working branch
     execute_process(
         COMMAND git log -1 --format=%h
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}

@@ -3,11 +3,6 @@
 
 #include "mimetypes.h"
 
-#include <KContacts/Addressee>
-#include <KContacts/ContactGroup>
-
-using namespace Akonadi::Quick;
-
 MimeTypes::MimeTypes(QObject *parent)
     : QObject(parent)
 {
@@ -15,25 +10,10 @@ MimeTypes::MimeTypes(QObject *parent)
 
 QString MimeTypes::calendar() const
 {
-    return QStringLiteral("application/x-vnd.akonadi.calendar.event");
+    return QStringLiteral("text/calendar");
 }
 
 QString MimeTypes::todo() const
 {
-    return QStringLiteral("application/x-vnd.akonadi.calendar.todo");
-}
-
-QString MimeTypes::address() const
-{
-    return KContacts::Addressee::mimeType();
-}
-
-QString MimeTypes::contactGroup() const
-{
-    return KContacts::ContactGroup::mimeType();
-}
-
-QString MimeTypes::mail() const
-{
-    return QStringLiteral("message/rfc822");
+    return QStringLiteral("text/calendar");
 }

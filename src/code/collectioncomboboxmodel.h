@@ -3,101 +3,51 @@
 
 #pragma once
 
-#include <Akonadi/Collection>
-#include <QSortFilterProxyModel>
-#include <memory>
-#include <qobjectdefs.h>
+#include <QAbstractListModel>
+#include <QColor>
+#include <QObject>
 #include <QQmlEngine>
 #include "calendar_export.h"
 
-namespace Akonadi
-{
-namespace Quick
-{
-class CollectionComboBoxModelPrivate;
-
 /**
- * @short The model for a combobox for selecting an Akonadi collection.
+ * @short A model listing the available local calendars for use in a ComboBox.
  *
- * This model provides a way easily select a collection
- * from the Akonadi storage.
- * The available collections can be filtered by mime type and
- * access rights.
- *
- * Example:
- *
- * @code{.qml}
- *
- * import QtQuick.Controls 2.15 as QQC2
- * import org.kde.akonadi 1.0 as Akonadi
- *
- * QQC2.ComboBox {
- *     model: AkonadiQuick.ComboBoxModel {
- *         mimeTypeFilter: [Akonadi.MimeTypes.address, Akonadi.MimeTypes.contactGroup]
- *         accessRightsFilter: Akonadi.Collection.CanCreateItem
- *     }
- * }
- * @endcode
- *
- * @author Carl Schwan <carl@carlschwan.eu>
+ * Provides a simple list of local calendars stored as .ics files.
+ * The mimeTypeFilter and accessRightsFilter properties are accepted but ignored
+ * (all local calendars accept all types and are writable).
  */
-class CALENDAR_EXPORT CollectionComboBoxModel : public QSortFilterProxyModel
+class CALENDAR_EXPORT CollectionComboBoxModel : public QAbstractListModel
 {
     Q_OBJECT
     QML_ELEMENT
     Q_PROPERTY(QStringList mimeTypeFilter READ mimeTypeFilter WRITE setMimeTypeFilter NOTIFY mimeTypeFilterChanged)
     Q_PROPERTY(int accessRightsFilter READ accessRightsFilter WRITE setAccessRightsFilter NOTIFY accessRightsFilterChanged)
-
     Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged)
     Q_PROPERTY(qint64 defaultCollectionId READ defaultCollectionId WRITE setDefaultCollectionId NOTIFY defaultCollectionIdChanged)
 
 public:
-    explicit CollectionComboBoxModel(QObject *parent = nullptr);
-    ~CollectionComboBoxModel() override;
+    enum Roles {
+        CollectionIdRole = Qt::UserRole + 1,
+        CollectionColorRole = Qt::BackgroundRole,
+    };
 
-    /**
-     * Sets the content @p mimetypes the collections shall be filtered by.
-     */
+    explicit CollectionComboBoxModel(QObject *parent = nullptr);
+
+    int rowCount(const QModelIndex &parent = {}) const override;
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+    QHash<int, QByteArray> roleNames() const override;
+
+    QStringList mimeTypeFilter() const;
     void setMimeTypeFilter(const QStringList &mimetypes);
 
-    /**
-     * Returns the content mimetype the collections are filtered by.
-     * Don't assume this list has the original order.
-     */
-    Q_REQUIRED_RESULT QStringList mimeTypeFilter() const;
-
-    /**
-     * Sets the access @p rights the collections shall be filtered by.
-     */
+    int accessRightsFilter() const;
     void setAccessRightsFilter(int rights);
 
-    /**
-     * Returns the access rights the collections are filtered by.
-     */
-    Q_REQUIRED_RESULT int accessRightsFilter() const;
-
-    /**
-     * Return the default collection id.
-     */
     qint64 defaultCollectionId() const;
-
-    /**
-     * Sets the @p collection that shall be selected by default.
-     */
     void setDefaultCollectionId(qint64 collectionId);
 
-    /**
-     * Sets if the virtual collections are excluded.
-     */
-    void setExcludeVirtualCollections(bool b);
-
-    /**
-     * Returns if the virual exollections are excluded
-     */
-    Q_REQUIRED_RESULT bool excludeVirtualCollections() const;
-
     int currentIndex() const;
-    void setCurrentIndex(int currendIndex);
+    void setCurrentIndex(int index);
 
 Q_SIGNALS:
     void mimeTypeFilterChanged();
@@ -106,8 +56,12 @@ Q_SIGNALS:
     void currentIndexChanged();
 
 private:
-    std::unique_ptr<CollectionComboBoxModelPrivate> const d;
-};
+    struct LocalCalendar {
+        QString name;
+        QColor color;
+    };
 
-}
-}
+    QList<LocalCalendar> m_calendars;
+    int m_currentIndex = 0;
+    qint64 m_defaultCollectionId = 0;
+};

@@ -9,6 +9,4 @@ namespace MauiKitCalendar
    CALENDAR_EXPORT QString versionString();
    CALENDAR_EXPORT QString buildVersion();
    CALENDAR_EXPORT KAboutComponent aboutData();
-
-   CALENDAR_EXPORT KAboutComponent aboutAkonadi();
 }

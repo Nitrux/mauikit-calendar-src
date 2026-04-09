@@ -5,7 +5,6 @@
 
 #include "hourlyincidencemodel.h"
 #include "multidayincidencemodel.h"
-#include <Akonadi/ETMCalendar>
 #include <QLocale>
 #include <QQmlEngine>
 #include "calendar_export.h"
