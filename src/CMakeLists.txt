@@ -11,7 +11,8 @@ set_source_files_properties(controls.${QT_MAJOR_VERSION}/KalendarUiUtils.qml PRO
 ecm_add_qml_module(MauiKitCalendar${MAUI_MAJOR_VERSION}
     VERSION 1.0
     URI "org.mauikit.calendar"
-    CLASS_NAME MauiCalendarPlugin)
+    CLASS_NAME MauiCalendarPlugin
+    NO_GENERATE_PLUGIN_SOURCE)
 
 ##header files to install
 set(lib_HDRS
@@ -111,7 +112,15 @@ target_link_libraries(MauiKitCalendar${MAUI_MAJOR_VERSION}
 target_link_libraries(MauiKitCalendar${MAUI_MAJOR_VERSION}plugin
     PRIVATE
     MauiKitCalendar${MAUI_MAJOR_VERSION}
-    Qt${QT_MAJOR_VERSION}::Qml)
+    MauiKit${MAUI_MAJOR_VERSION}
+    Qt${QT_MAJOR_VERSION}::Core
+    Qt${QT_MAJOR_VERSION}::Gui
+    Qt${QT_MAJOR_VERSION}::Quick
+    Qt${QT_MAJOR_VERSION}::Qml
+    KF${KF_MAJOR_VERSION}::I18n
+    KF${KF_MAJOR_VERSION}::CoreAddons
+    KF${KF_MAJOR_VERSION}::ConfigCore
+    KF${KF_MAJOR_VERSION}::CalendarCore)
 
 ecm_finalize_qml_module(MauiKitCalendar${MAUI_MAJOR_VERSION} DESTINATION ${KDE_INSTALL_QMLDIR})
 
