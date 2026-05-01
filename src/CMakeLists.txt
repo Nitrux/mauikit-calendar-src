@@ -89,8 +89,8 @@ target_compile_options(MauiKitCalendar${MAUI_MAJOR_VERSION} PRIVATE -Wno-missing
 
 generate_export_header(MauiKitCalendar${MAUI_MAJOR_VERSION} BASE_NAME Calendar)
 set_target_properties(MauiKitCalendar${MAUI_MAJOR_VERSION} PROPERTIES
-    VERSION ${PROJECT_VERSION}
-    SOVERSION ${PROJECT_VERSION_MAJOR}
+    VERSION ${MAUIKIT_SO_VERSION}
+    SOVERSION ${MAUIKIT_SO_VERSION}
     EXPORT_NAME "Calendar")
 
 target_include_directories(MauiKitCalendar${MAUI_MAJOR_VERSION}
