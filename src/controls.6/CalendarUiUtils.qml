@@ -26,7 +26,7 @@ QtObject {
         }
         appMain.pageStack.replace(newViewComponent);
 
-        if (appMain.filterHeaderBarLoaderItem.active && appMain.pageStack.currentItem.mode !== KalendarApplication.Contact) {
+        if (appMain.filterHeaderBarLoaderItem.active && appMain.pageStack.currentItem.mode !== CalendarApplication.Contact) {
             appMain.pageStack.currentItem.header = appMain.filterHeaderBarLoaderItem.item;
         }
 
@@ -36,7 +36,7 @@ QtObject {
             }
         }
 
-        if (appMain.pageStack.currentItem.mode === KalendarApplication.Event) {
+        if (appMain.pageStack.currentItem.mode === CalendarApplication.Event) {
             appMain.pageStack.currentItem.setToDate(appMain.selectedDate, true);
         }
     }
@@ -54,7 +54,7 @@ QtObject {
     function setUpAdd(type, addDate, collectionId, includeTime) {
         let editorToUse = utilsObject.editorToUse();
         if (editorToUse.editMode || !editorToUse.incidenceWrapper) {
-            editorToUse.incidenceWrapper = Qt.createQmlObject('import org.kde.kalendar 1.0; IncidenceWrapper {id: incidence}',
+            editorToUse.incidenceWrapper = Qt.createQmlObject('import org.mauikit.calendar 1.0; IncidenceWrapper {id: incidence}',
                                                               editorToUse, "incidence");
         }
         editorToUse.editMode = false;
@@ -99,7 +99,7 @@ QtObject {
     function setUpAddSubTodo(parentWrapper) {
         let editorToUse = utilsObject.editorToUse();
         if (editorToUse.editMode || !editorToUse.incidenceWrapper) {
-            editorToUse.incidenceWrapper = Qt.createQmlObject('import org.kde.kalendar 1.0; IncidenceWrapper {id: incidence}',
+            editorToUse.incidenceWrapper = Qt.createQmlObject('import org.mauikit.calendar 1.0; IncidenceWrapper {id: incidence}',
                                                               editorToUse, "incidence");
         }
         editorToUse.editMode = false;
@@ -154,7 +154,7 @@ QtObject {
 
     function setUpEdit(incidencePtr) {
         let editorToUse = utilsObject.editorToUse();
-        editorToUse.incidenceWrapper = Qt.createQmlObject('import org.kde.kalendar 1.0; IncidenceWrapper {id: incidence}',
+        editorToUse.incidenceWrapper = Qt.createQmlObject('import org.mauikit.calendar 1.0; IncidenceWrapper {id: incidence}',
                                                           editorToUse, "incidence");
         editorToUse.incidenceWrapper.incidenceItem = CalendarManager.incidenceItem(incidencePtr);
         editorToUse.incidenceWrapper.triggerEditMode();
@@ -162,7 +162,7 @@ QtObject {
     }
 
     function setUpDelete(incidencePtr, deleteDate) {
-        let incidenceWrapper = Qt.createQmlObject('import org.kde.kalendar 1.0; IncidenceWrapper {id: incidence}', utilsObject, "incidence");
+        let incidenceWrapper = Qt.createQmlObject('import org.mauikit.calendar 1.0; IncidenceWrapper {id: incidence}', utilsObject, "incidence");
         incidenceWrapper.incidenceItem = CalendarManager.incidenceItem(incidencePtr);
 
         const openDialogWindow = appMain.pageStack.pushDialogLayer(appMain.deleteIncidencePageComponent, {
@@ -177,7 +177,7 @@ QtObject {
     }
 
     function completeTodo(incidencePtr) {
-        let todo = Qt.createQmlObject('import org.kde.kalendar 1.0; IncidenceWrapper {id: incidence}',
+        let todo = Qt.createQmlObject('import org.mauikit.calendar 1.0; IncidenceWrapper {id: incidence}',
                                       utilsObject, "incidence");
 
         todo.incidenceItem = CalendarManager.incidenceItem(incidencePtr);

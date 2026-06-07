@@ -6,7 +6,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/code
     ${CMAKE_CURRENT_SOURCE_DIR}/code/models)
 
 add_library(MauiKitCalendar${MAUI_MAJOR_VERSION})
-set_source_files_properties(controls.${QT_MAJOR_VERSION}/KalendarUiUtils.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(controls.${QT_MAJOR_VERSION}/CalendarUiUtils.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
 ecm_add_qml_module(MauiKitCalendar${MAUI_MAJOR_VERSION}
     VERSION 1.0
@@ -80,7 +80,7 @@ ecm_target_qml_sources(MauiKitCalendar${MAUI_MAJOR_VERSION} SOURCES
     controls.${QT_MAJOR_VERSION}/TimeComboBox.qml
     controls.${QT_MAJOR_VERSION}/YearsGrid.qml
     controls.${QT_MAJOR_VERSION}/YearView.qml
-    controls.${QT_MAJOR_VERSION}/KalendarUiUtils.qml
+    controls.${QT_MAJOR_VERSION}/CalendarUiUtils.qml
     controls.${QT_MAJOR_VERSION}/TimePicker.qml)
 
 add_library(MauiKit${MAUI_MAJOR_VERSION}::Calendar ALIAS MauiKitCalendar${MAUI_MAJOR_VERSION})

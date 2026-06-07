@@ -3,7 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Controls
 
 import org.mauikit.controls as Maui
-import org.mauikit.calendar as Kalendar
+import org.mauikit.calendar as Calendar
 
 /**
  * @inherit QtQuick.Controls.ComboBox
@@ -60,7 +60,7 @@ ComboBox
 
     Maui.Controls.iconName: "clock"
 
-    popupContent: Kalendar.TimePicker
+    popupContent: Calendar.TimePicker
     {
         id: _picker
         onAccepted:

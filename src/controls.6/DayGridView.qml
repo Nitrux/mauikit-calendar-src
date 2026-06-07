@@ -8,7 +8,7 @@ import QtQuick.Layouts
 import QtQuick.Controls as QQC2
 import org.mauikit.controls as Maui
 
-import org.mauikit.calendar as Kalendar
+import org.mauikit.calendar as Calendar
 import "dateutils.js" as DateUtils
 import "labelutils.js" as LabelUtils
 
@@ -52,8 +52,8 @@ QQC2.Pane
 
     property int dayHeight: ((height - topPadding - bottomPadding - bgLoader.dayLabelsBar.height) / numberOfRows) - spacing
 
-    readonly property bool isDark: KalendarUiUtils.darkMode
-    //    readonly property int mode: Kalendar.KalendarApplication.Event
+    readonly property bool isDark: CalendarUiUtils.darkMode
+    //    readonly property int mode: Calendar.CalendarApplication.Event
 
     //    implicitHeight: (numberOfRows > 1 ? Maui.Style.units.gridUnit * 10 * numberOfRows : numberOfLinesShown * Maui.Style.units.gridUnit) + bgLoader.dayLabelsBar.height +topPadding + bottomPadding
     //    height: implicitHeight
@@ -76,7 +76,7 @@ QQC2.Pane
             spacing: root.spacing
 
             property alias dayLabelsBar: dayLabelsBarComponent
-            Kalendar.DayLabelsBar
+            Calendar.DayLabelsBar
             {
                 id: dayLabelsBarComponent
                 delegate: root.dayHeaderDelegate
@@ -217,11 +217,11 @@ QQC2.Pane
 
                                                 Repeater
                                                 {
-                                                    model: Kalendar.IncidenceOccurrenceModel
+                                                    model: Calendar.IncidenceOccurrenceModel
                                                     {
                                                         start: gridItem.date
                                                         length: 0
-                                                        filter: Kalendar.Filter
+                                                        filter: Calendar.Filter
                                                     }
 
 
@@ -321,7 +321,7 @@ QQC2.Pane
     //                                            var localpos = child.mapFromGlobal(globalPos.x, globalPos.y);
 
     //                                            if(child.contains(localpos) && child.gridSquareDate) {
-    //                                                KalendarUiUtils.setUpAdd(type, child.gridSquareDate);
+    //                                                CalendarUiUtils.setUpAdd(type, child.gridSquareDate);
     //                                            } else {
     //                                                useGridSquareDate(type, child, globalPos);
     //                                            }
@@ -329,7 +329,7 @@ QQC2.Pane
     //                                    }
 
     //                                    onAddNewIncidence: useGridSquareDate(type, applicationWindow().contentItem, this.mapToGlobal(clickX, clickY))
-    //                                    onDeselect: KalendarUiUtils.appMain.incidenceInfoDrawer.close()
+    //                                    onDeselect: CalendarUiUtils.appMain.incidenceInfoDrawer.close()
     //                                }
 
     //                                model: incidences

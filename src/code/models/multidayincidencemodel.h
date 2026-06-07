@@ -13,7 +13,7 @@
 #include <QSharedPointer>
 #include <QTimer>
 #include "calendar_export.h"
-//#include <kalendarconfig.h>
+//#include <calendarconfig.h>
 
 namespace KCalendarCore
 {
@@ -87,7 +87,7 @@ private:
     IncidenceOccurrenceModel *mSourceModel{nullptr};
     int mPeriodLength{7};
     MultiDayIncidenceModel::Filters m_filters;
-//    KalendarConfig *m_config = nullptr;
+//    CalendarConfig *m_config = nullptr;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(MultiDayIncidenceModel::Filters)

@@ -9,7 +9,7 @@ import QtQuick.Layouts
 import QtQuick.Controls 
 
 import org.mauikit.controls as Maui
-import org.mauikit.calendar as Kalendar
+import org.mauikit.calendar as Calendar
 
 import "dateutils.js" as DateUtils
 
@@ -158,10 +158,10 @@ Pane
         color: Maui.Theme.backgroundColor
     }
     
-    Kalendar.InfiniteCalendarViewModel
+    Calendar.InfiniteCalendarViewModel
     {
         id: _monthViewModel
-        scale: Kalendar.InfiniteCalendarViewModel.MonthScale
+        scale: Calendar.InfiniteCalendarViewModel.MonthScale
     }
     
     contentItem: PathView
@@ -231,7 +231,7 @@ Pane
             asynchronous: !isCurrentItem
             visible: status === Loader.Ready
             
-            sourceComponent: Kalendar.DayGridView
+            sourceComponent: Calendar.DayGridView
             {
                 id: dayView
                 objectName: "monthView"
@@ -344,12 +344,12 @@ Pane
         let monthDiff = date.getMonth() - pathView.currentItem.firstDayOfMonth.getMonth() + (12 * (date.getFullYear() - pathView.currentItem.firstDayOfMonth.getFullYear()))
         let newIndex = pathView.currentIndex + monthDiff;
         
-        let firstItemDate = pathView.model.data(pathView.model.index(1,0), Kalendar.InfiniteCalendarViewModel.FirstDayOfMonthRole);
-        let lastItemDate = pathView.model.data(pathView.model.index(pathView.model.rowCount() - 1,0), Kalendar.InfiniteCalendarViewModel.FirstDayOfMonthRole);
+        let firstItemDate = pathView.model.data(pathView.model.index(1,0), Calendar.InfiniteCalendarViewModel.FirstDayOfMonthRole);
+        let lastItemDate = pathView.model.data(pathView.model.index(pathView.model.rowCount() - 1,0), Calendar.InfiniteCalendarViewModel.FirstDayOfMonthRole);
         
         while(firstItemDate >= date) {
             pathView.model.addDates(false)
-            firstItemDate = pathView.model.data(pathView.model.index(1,0), Kalendar.InfiniteCalendarViewModel.FirstDayOfMonthRole);
+            firstItemDate = pathView.model.data(pathView.model.index(1,0), Calendar.InfiniteCalendarViewModel.FirstDayOfMonthRole);
             newIndex = 0;
         }
         if(firstItemDate < date && newIndex === 0) {
@@ -358,7 +358,7 @@ Pane
         
         while(lastItemDate <= date) {
             pathView.model.addDates(true)
-            lastItemDate = pathView.model.data(pathView.model.index(pathView.model.rowCount() - 1,0), Kalendar.InfiniteCalendarViewModel.FirstDayOfMonthRole);
+            lastItemDate = pathView.model.data(pathView.model.index(pathView.model.rowCount() - 1,0), Calendar.InfiniteCalendarViewModel.FirstDayOfMonthRole);
         }
         pathView.currentIndex = newIndex;
     }

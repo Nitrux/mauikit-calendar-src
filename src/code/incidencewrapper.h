@@ -3,10 +3,6 @@
 
 #pragma once
 
-#include "models/attachmentsmodel.h"
-#include "models/attendeesmodel.h"
-#include "models/recurrenceexceptionsmodel.h"
-
 #include <KFormat>
 #include <QByteArray>
 #include <QObject>
@@ -153,12 +149,6 @@ public:
     Q_INVOKABLE void setRecurrenceDataItem(const QString &key, const QVariant &value);
 
     QVariantMap organizer();
-    KCalendarCore::Attendee::List attendees() const;
-
-    AttendeesModel *attendeesModel();
-    RecurrenceExceptionsModel *recurrenceExceptionsModel();
-    AttachmentsModel *attachmentsModel();
-
     bool todoCompleted();
     void setTodoCompleted(bool completed);
     QDateTime todoCompletionDt();

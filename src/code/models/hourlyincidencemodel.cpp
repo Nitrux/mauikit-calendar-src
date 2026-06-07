@@ -10,8 +10,8 @@ HourlyIncidenceModel::HourlyIncidenceModel(QObject *parent)
 {
     mRefreshTimer.setSingleShot(true);
 
-//    m_config = KalendarConfig::self();
-//    QObject::connect(m_config, &KalendarConfig::showSubtodosInCalendarViewsChanged, this, [&]() {
+//    m_config = CalendarConfig::self();
+//    QObject::connect(m_config, &CalendarConfig::showSubtodosInCalendarViewsChanged, this, [&]() {
 //        beginResetModel();
 //        endResetModel();
 //    });
@@ -69,7 +69,7 @@ QList<QModelIndex> HourlyIncidenceModel::sortedIncidencesFromSourceModel(const Q
 
         // Skip incidences not part of the week
         if (end < rowStart || start > rowEnd) {
-            // qCWarning(KALENDAR_LOG) << "Skipping because not part of this week";
+            // qCWarning(CALENDAR_LOG) << "Skipping because not part of this week";
             continue;
         }
 
@@ -85,7 +85,7 @@ QList<QModelIndex> HourlyIncidenceModel::sortedIncidencesFromSourceModel(const Q
 //            && !srcIdx.data(IncidenceOccurrenceModel::IncidencePtr).value<KCalendarCore::Incidence::Ptr>()->relatedTo().isEmpty()) {
 //            continue;
 //        }
-        // qCWarning(KALENDAR_LOG) << "found " << srcIdx.data(IncidenceOccurrenceModel::StartTime).toDateTime() <<
+        // qCWarning(CALENDAR_LOG) << "found " << srcIdx.data(IncidenceOccurrenceModel::StartTime).toDateTime() <<
         // srcIdx.data(IncidenceOccurrenceModel::Summary).toString();
         sorted.append(srcIdx);
     }
@@ -127,7 +127,7 @@ QVariantList HourlyIncidenceModel::layoutLines(const QDateTime &rowStart) const
     const int periodsPerDay = (24 * 60) / mPeriodLength;
 
     // for (const auto &srcIdx : sorted) {
-    //     qCWarning(KALENDAR_LOG) << "sorted " << srcIdx.data(IncidenceOccurrenceModel::StartTime).toDateTime() <<
+    //     qCWarning(CALENDAR_LOG) << "sorted " << srcIdx.data(IncidenceOccurrenceModel::StartTime).toDateTime() <<
     //     srcIdx.data(IncidenceOccurrenceModel::Summary).toString()
     //     << srcIdx.data(IncidenceOccurrenceModel::AllDay).toBool();
     // }

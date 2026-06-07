@@ -6,15 +6,15 @@
 // SPDX-License-Identifier: LGPL-2.0-or-later
 
 #include "multidayincidencemodel.h"
-//#include "kalendar_debug.h"
+//#include "calendar_debug.h"
 #include <QBitArray>
 
 MultiDayIncidenceModel::MultiDayIncidenceModel(QObject *parent)
     : QAbstractItemModel(parent)
 {
     mRefreshTimer.setSingleShot(true);
-//    m_config = KalendarConfig::self();
-//    QObject::connect(m_config, &KalendarConfig::showSubtodosInCalendarViewsChanged, this, [&]() {
+//    m_config = CalendarConfig::self();
+//    QObject::connect(m_config, &CalendarConfig::showSubtodosInCalendarViewsChanged, this, [&]() {
 //        beginResetModel();
 //        endResetModel();
 //    });

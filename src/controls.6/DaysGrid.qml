@@ -3,7 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Controls 
 
 import org.mauikit.controls as Maui
-import org.mauikit.calendar as Kalendar
+import org.mauikit.calendar as Calendar
 
 import "dateutils.js" as DateUtils
 
@@ -81,7 +81,7 @@ Page
     
     padding: control.compact ? Maui.Style.space.small : Maui.Style.defaultPadding    
     
-    Kalendar.MonthModel
+    Calendar.MonthModel
     {
         id: _monthModel
     }
