@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <KCalendarCore/Calendar>
 #include <KFormat>
 #include <QByteArray>
 #include <QObject>
