@@ -32,6 +32,7 @@ set(AUTOMOC_MOC_OPTIONS -Muri=org.mauikit.calendar)
 
 project(Calendar LANGUAGES CXX VERSION ${MAUIKIT_RELEASE_VERSION})
 
+
 if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
     message(FATAL_ERROR "This project supports Linux only.")
 endif()
