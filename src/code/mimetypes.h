@@ -8,6 +8,9 @@
 #include <QQmlEngine>
 #include "calendar_export.h"
 
+/**
+ *  Provides the calendar-event and to-do MIME type names to QML.
+ */
 class CALENDAR_EXPORT MimeTypes : public QObject
 {
     Q_OBJECT

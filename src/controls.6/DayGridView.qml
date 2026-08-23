@@ -12,6 +12,15 @@ import org.mauikit.calendar as Calendar
 import "dateutils.js" as DateUtils
 import "labelutils.js" as LabelUtils
 
+/**
+ *  QtQuick.Controls.Pane
+ *  Displays a configurable grid of calendar days and their incidences.
+ *
+ * The grid begins at startDate and contains daysToShow cells arranged in
+ * daysPerRow columns. Applications provide dayHeaderDelegate and optionally
+ * weekHeaderDelegate, and receive dateClicked or dateDoubleClicked when a day
+ * is activated.
+ */
 QQC2.Pane
 {
     id: root

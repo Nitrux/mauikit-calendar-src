@@ -9,6 +9,12 @@
 #include <QQmlEngine>
 #include "calendar_export.h"
 
+/**
+ *  Supplies date ranges for an incrementally scrolling calendar view.
+ *
+ * scale selects day through decade-sized entries and addDates() extends either
+ * end of the model without replacing the visible range.
+ */
 class CALENDAR_EXPORT InfiniteCalendarViewModel : public QAbstractListModel
 {
     Q_OBJECT

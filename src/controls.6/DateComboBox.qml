@@ -5,6 +5,13 @@ import QtQuick.Controls
 import org.mauikit.controls as Maui
 import org.mauikit.calendar as Calendar
 
+/**
+ *  QtQuick.Controls.ComboBox
+ *  Opens a DatePicker and displays its selected date.
+ *
+ * selectedDay, selectedMonth, selectedYear, and selectedDate mirror the picker.
+ * datePicked is emitted after the user accepts a date.
+ */
 ComboBox
 {
     id:  control

@@ -3,6 +3,9 @@
 
 #include <QSortFilterProxyModel>
 
+/**
+ *  Filters and sorts command-bar entries using a user-entered string.
+ */
 class CommandBarFilterModel final : public QSortFilterProxyModel
 {
     Q_OBJECT

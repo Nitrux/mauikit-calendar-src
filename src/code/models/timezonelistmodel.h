@@ -8,6 +8,9 @@
 #include <QQmlEngine>
 #include "calendar_export.h"
 
+/**
+ *  Lists available time zones and resolves a zone identifier to its row.
+ */
 class CALENDAR_EXPORT TimeZoneListModel : public QAbstractListModel
 {
     Q_OBJECT

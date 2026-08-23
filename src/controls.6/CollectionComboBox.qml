@@ -7,8 +7,8 @@ import org.mauikit.calendar as Cal
 import org.mauikit.controls as Maui
 
 /**
- * Special combobox control that allows to choose a collection.
- * The collection displayed can be filtered using the \p mimeTypeFilter
+ *  Selects a calendar collection from a CollectionComboBoxModel.
+ * The collection displayed can be filtered using the  mimeTypeFilter
  * and @p accessRightsFilter properties.
  */
 ComboBox

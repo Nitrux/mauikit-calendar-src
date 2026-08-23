@@ -5,7 +5,9 @@
 #include <QQmlEngine>
 #include "calendar_export.h"
 /**
- * This class is used to enable cross-compatible filtering of data in models.
+ *  Stores shared collection, tag, and text criteria for calendar models.
+ *
+ * The singleton can toggle individual tags or reset all criteria at once.
  */
 class CALENDAR_EXPORT Filter : public QObject
 {

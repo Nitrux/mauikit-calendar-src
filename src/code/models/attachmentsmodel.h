@@ -7,6 +7,12 @@
 #include <QAbstractListModel>
 #include <QMimeDatabase>
 
+/**
+ *  Lists and edits the attachments belonging to a calendar incidence.
+ *
+ * Model roles expose each attachment label, MIME type, icon, data, size, and
+ * URI. Setting incidencePtr replaces the incidence whose attachments are shown.
+ */
 class AttachmentsModel : public QAbstractListModel
 {
     Q_OBJECT

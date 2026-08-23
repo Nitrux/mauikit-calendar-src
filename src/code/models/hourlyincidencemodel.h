@@ -18,7 +18,9 @@ class Incidence;
 }
 
 /**
- * Each toplevel index represents a day.
+ *  Groups timed incidence occurrences into visual lines for each day.
+ *
+ * Each top-level index represents a day.
  * The "incidences" roles provides a list of lists, where each list represents a visual line,
  * containing a number of events to display.
  */

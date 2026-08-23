@@ -18,6 +18,9 @@
  * dimensional data structure.
  */
 
+/**
+ *  Lists and edits the reminder alarms attached to an incidence.
+ */
 class RemindersModel : public QAbstractListModel
 {
     Q_OBJECT

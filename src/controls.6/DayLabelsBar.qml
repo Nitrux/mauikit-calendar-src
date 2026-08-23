@@ -7,6 +7,14 @@ import QtQuick.Controls
 
 import "dateutils.js" as DateUtils
 
+/**
+ *  QtQuick.Row
+ *  Lays out one delegate for each visible day label.
+ *
+ * startDate identifies the first day, daysToShow controls the number of labels,
+ * and dayWidth fixes the width supplied to each delegate loader. Each delegate
+ * receives a day property containing its represented date.
+ */
 Row
 {
     id: root

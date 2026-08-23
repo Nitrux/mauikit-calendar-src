@@ -11,6 +11,12 @@
 #include "calendar_export.h"
 
 /// Month model exposing month days and events to a QML view.
+/**
+ *  Represents the day cells and selection state of one calendar month.
+ *
+ * next(), previous(), and goToday() update the displayed month and selected
+ * date for date-picker and month-grid controls.
+ */
 class CALENDAR_EXPORT MonthModel : public QAbstractListModel
 {
     Q_OBJECT

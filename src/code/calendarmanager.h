@@ -17,6 +17,12 @@
 
 #include "incidencewrapper.h"
 
+/**
+ *  Owns the application calendar and persists incidence changes.
+ *
+ * This singleton exposes the available collections, reports loading state, and
+ * provides the add, edit, delete, and save operations used by QML clients.
+ */
 class CALENDAR_EXPORT CalendarManager : public QObject
 {
     Q_OBJECT

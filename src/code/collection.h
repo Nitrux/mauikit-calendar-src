@@ -8,6 +8,12 @@
 #include <QQmlEngine>
 #include "calendar_export.h"
 
+/**
+ *  Defines collection access-right flags and model roles for QML.
+ *
+ * Collection is an uncreatable namespace type; collection instances are
+ * supplied by Calendar models rather than constructed directly.
+ */
 class CALENDAR_EXPORT Collection : public QObject
 {
     Q_OBJECT

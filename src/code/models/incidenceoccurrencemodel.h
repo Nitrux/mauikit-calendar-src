@@ -23,6 +23,13 @@
 
 class Filter;
 
+/**
+ *  Expands calendar incidences into occurrences over a date range.
+ *
+ * start and length select the requested range, while filter restricts the
+ * resulting occurrences. Recurring incidences may therefore produce multiple
+ * rows. loading indicates that a scheduled model reset is in progress.
+ */
 class CALENDAR_EXPORT IncidenceOccurrenceModel : public QAbstractListModel
 {
     Q_OBJECT

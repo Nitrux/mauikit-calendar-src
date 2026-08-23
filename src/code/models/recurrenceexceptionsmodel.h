@@ -6,6 +6,9 @@
 #include <KCalendarCore/Calendar>
 #include <QAbstractListModel>
 
+/**
+ *  Lists and edits exception dates for a recurring incidence.
+ */
 class RecurrenceExceptionsModel : public QAbstractListModel
 {
     Q_OBJECT

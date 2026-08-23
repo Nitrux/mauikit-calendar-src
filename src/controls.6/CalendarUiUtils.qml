@@ -11,6 +11,13 @@ import "dateutils.js" as DateUtils
 import "labelutils.js" as LabelUtils
 import org.mauikit.calendar 
 
+/**
+ *  Coordinates common calendar navigation and incidence-editing workflows.
+ *
+ * Set appMain to the host application object that provides the page stack,
+ * incidence editor, information drawer, and current-view hooks expected by the
+ * helper functions.
+ */
 QtObject {
     id: utilsObject
     property var appMain

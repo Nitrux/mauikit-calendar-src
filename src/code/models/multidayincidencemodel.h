@@ -25,6 +25,12 @@ class Incidence;
  * The "incidences" roles provides a list of lists, where each list represents a visual line,
  * containing a number of events to display.
  */
+/**
+ *  Arranges all-day and multi-day occurrences into per-day layout lines.
+ *
+ * The model derives its entries from IncidenceOccurrenceModel and can filter
+ * out all-day or multi-day incidences independently.
+ */
 class CALENDAR_EXPORT MultiDayIncidenceModel : public QAbstractItemModel
 {
     Q_OBJECT

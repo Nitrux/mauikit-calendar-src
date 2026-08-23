@@ -11,7 +11,7 @@
 #include "calendar_export.h"
 
 /**
- * This class is a wrapper for a KCalendarCore::Incidence::Ptr object.
+ *  Exposes a KCalendarCore incidence and its editable fields to QML.
  * We can use it to create new incidences, or wrap pre-existing incidences,
  * to more cleanly pass around to QML or to CalendarManager.
  */
