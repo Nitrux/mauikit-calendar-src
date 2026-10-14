@@ -1,6 +1,6 @@
 #include "moduleinfo.h"
 #include <QString>
-#include "../calendar_version.h"
+#include "calendar_version.h"
 
 QString MauiKitCalendar::versionString()
 {

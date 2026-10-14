@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <QtQmlIntegration/qqmlintegration.h>
+
 #include <QAbstractListModel>
 #include <QDate>
 #include <QLocale>

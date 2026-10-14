@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <QtQmlIntegration/qqmlintegration.h>
+
 #include "hourlyincidencemodel.h"
 #include "multidayincidencemodel.h"
 #include <QLocale>

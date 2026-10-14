@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <QtQmlIntegration/qqmlintegration.h>
+
 #include "incidenceoccurrencemodel.h"
 #include <QAbstractItemModel>
 #include <QList>

@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <QtQmlIntegration/qqmlintegration.h>
+
 #include <QAbstractItemModel>
 #include <QJSEngine>
 #include <QObject>

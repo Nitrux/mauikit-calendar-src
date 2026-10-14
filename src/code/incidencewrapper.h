@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <QtQmlIntegration/qqmlintegration.h>
+
 #include <KCalendarCore/Calendar>
 #include <KFormat>
 #include <QByteArray>

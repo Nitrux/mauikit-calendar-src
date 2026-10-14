@@ -100,5 +100,3 @@ void CollectionComboBoxModel::setCurrentIndex(int index)
     m_currentIndex = index;
     Q_EMIT currentIndexChanged();
 }
-
-#include "moc_collectioncomboboxmodel.cpp"

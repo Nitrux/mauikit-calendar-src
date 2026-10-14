@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <QtQmlIntegration/qqmlintegration.h>
+
 #include <QAbstractItemModel>
 #include <QColor>
 #include <QDateTime>
@@ -19,9 +21,9 @@
 #include <KCalendarCore/MemoryCalendar>
 #include <KFormat>
 
+#include "../filter.h"
 #include "calendar_export.h"
 
-class Filter;
 
 /**
  *  Expands calendar incidences into occurrences over a date range.

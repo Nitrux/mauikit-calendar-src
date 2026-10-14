@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <QtQmlIntegration/qqmlintegration.h>
+
 #include <QAbstractListModel>
 #include <QColor>
 #include <QObject>

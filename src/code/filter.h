@@ -1,8 +1,11 @@
 // SPDX-FileCopyrightText: 2022 Carl Schwan <carl@carlschwan.eu>
 // SPDX-License-Identifier: LGPL-2.0-or-later
 
+#pragma once
+
 #include <QObject>
 #include <QQmlEngine>
+#include <QtQmlIntegration/qqmlintegration.h>
 #include "calendar_export.h"
 /**
  *  Stores shared collection, tag, and text criteria for calendar models.

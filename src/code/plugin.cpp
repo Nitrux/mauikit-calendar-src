@@ -39,5 +39,3 @@ void MauiCalendarPlugin::registerTypes(const char *uri)
     qmlRegisterType<MultiDayIncidenceModel>(uri, 1, 0, "MultiDayIncidenceModel");
     qmlRegisterType<TimeZoneListModel>(uri, 1, 0, "TimeZoneListModel");
 }
-
-#include "moc_plugin.cpp"
