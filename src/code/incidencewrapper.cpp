@@ -237,7 +237,7 @@ void IncidenceWrapper::setIncidenceStartTime(int hours, int minutes)
 
 QString IncidenceWrapper::incidenceStartDateDisplay() const
 {
-    return QLocale::system().toString(incidenceStart().date(), QLocale::NarrowFormat);
+    return QLocale::system().toString(incidenceStart().date(), QStringLiteral("dd/MM/yyyy"));
 }
 
 QString IncidenceWrapper::incidenceStartTimeDisplay() const
@@ -306,7 +306,7 @@ void IncidenceWrapper::setIncidenceEndTime(int hours, int minutes)
 
 QString IncidenceWrapper::incidenceEndDateDisplay() const
 {
-    return QLocale::system().toString(incidenceEnd().date(), QLocale::NarrowFormat);
+    return QLocale::system().toString(incidenceEnd().date(), QStringLiteral("dd/MM/yyyy"));
 }
 
 QString IncidenceWrapper::incidenceEndTimeDisplay() const

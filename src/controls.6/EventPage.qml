@@ -54,12 +54,14 @@ Pane
 
             Maui.SectionItem
             {
-                label1.text: i18n("Description")
+                label1.visible: false
 
-                TextField
+                Maui.TextField
                 {
                     Layout.fillWidth: true
-                    height: 80
+                    Maui.Controls.title: i18n("Event title")
+                    Maui.Controls.subtitle: incidenceWrapper.summary.trim().length === 0 ? i18n("Event title cannot be empty.") : ""
+                    Maui.Controls.status: incidenceWrapper.summary.trim().length === 0 ? Maui.Controls.Negative : Maui.Controls.Normal
                     text: incidenceWrapper.summary
                     placeholderText: i18n(`Add a title for your ${incidenceWrapper.incidenceTypeStr.toLowerCase()}`)
                     onTextChanged: incidenceWrapper.summary = text
@@ -158,8 +160,8 @@ Pane
                 {
                     id: incidenceEndDateCombo
                     Layout.fillWidth: true
-                    displayText: incidenceWrapper.incidenceStartDateDisplay
-                    selectedDate: incidenceWrapper.incidenceStart
+                    displayText: incidenceWrapper.incidenceEndDateDisplay
+                    selectedDate: incidenceWrapper.incidenceEnd
                     onDatePicked:
                     {
                         incidenceWrapper.setIncidenceEndDate(date.getDate(), date.getMonth(), date.getYear())
@@ -183,7 +185,7 @@ Pane
 
             Maui.SectionItem
             {
-                label1.text: i18n("TimeZone")
+                label1.text: i18n("Timezone")
 
                 ComboBox
                 {
