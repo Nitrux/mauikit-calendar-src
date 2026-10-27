@@ -185,7 +185,7 @@ Pane
 
             Maui.SectionItem
             {
-                label1.text: i18n("Timezone")
+                label1.text: i18n("Time zone")
 
                 ComboBox
                 {
