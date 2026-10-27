@@ -3,7 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Controls
 
 import org.mauikit.controls as Maui
-import org.mauikit.calendar as Calendar
+import org.mauikit.calendar 1.0 as MauiCalendar
 
 /**
  *  QtQuick.Controls.ComboBox
@@ -32,7 +32,7 @@ ComboBox
 
     signal datePicked(var date)
 
-    popupContent: Calendar.DatePicker
+    popupContent: MauiCalendar.DatePicker
     {
         id: _picker
         implicitHeight: 300

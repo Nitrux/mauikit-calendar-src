@@ -3,7 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Controls 
 
 import org.mauikit.controls as Maui
-import org.mauikit.calendar as Calendar
+import org.mauikit.calendar 1.0 as MauiCalendar
 
 /**
  * @inherit QtQuick.Controls.Page
@@ -74,7 +74,7 @@ Page
                 
                 ButtonGroup
                 {
-                    buttons: _yearsGrid.children
+                    id: _yearButtonGroup
                 }
                 
                 Repeater
@@ -89,6 +89,7 @@ Page
                         
                         checkable: true
                         checked: year === control.selectedYear
+                        ButtonGroup.group: _yearButtonGroup
                         onClicked: control.yearSelected(year)
                         
                         background: Rectangle

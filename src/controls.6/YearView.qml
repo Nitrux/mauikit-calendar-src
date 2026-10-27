@@ -8,7 +8,7 @@ import QtQuick.Layouts
 import QtQuick.Controls 
 
 import org.mauikit.controls as Maui
-import org.mauikit.calendar as Calendar
+import org.mauikit.calendar 1.0 as MauiCalendar
 
 import "dateutils.js" as DateUtils
 
@@ -30,7 +30,7 @@ import "dateutils.js" as DateUtils
  *        Maui.Controls.showCSD: true
  *        title: root.title
  *
- *        MC.YearView
+ *        MauiCalendar.YearView
  *        {
  *            id: _view
  *            anchors.fill: parent
@@ -127,7 +127,7 @@ Pane
             width: GridView.view.cellWidth - (control.isTiny ? 0 : Maui.Style.space.small)
             height: GridView.view.cellHeight - (control.isTiny ? 0 : Maui.Style.space.small)
             
-            sourceComponent: Calendar.DaysGrid
+            sourceComponent: MauiCalendar.DaysGrid
             {
                 //                 Maui.Theme.colorSet: Maui.Theme.Button
                 //                 Maui.Theme.inherit: false

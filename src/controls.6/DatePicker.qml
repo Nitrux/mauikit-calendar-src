@@ -3,7 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Controls 
 
 import org.mauikit.controls as Maui
-import org.mauikit.calendar as Calendar
+import org.mauikit.calendar 1.0 as MauiCalendar
 
 /**
  * @inherit QtQuick.Controls.Page
@@ -22,7 +22,7 @@ import org.mauikit.calendar as Calendar
  *        Maui.Controls.showCSD: true
  *        title: root.title
  *
- *        MC.DatePicker
+ *        MauiCalendar.DatePicker
  *        {
  *            id: _datePicker
  *            height: 300
@@ -118,7 +118,7 @@ Page
         background: null
         clip: true
         
-        Calendar.DaysGrid
+        MauiCalendar.DaysGrid
         {
             id: _daysPane
             month: control.selectedMonth+1
@@ -130,14 +130,14 @@ Page
                            }
         }
         
-        Calendar.MonthsGrid
+        MauiCalendar.MonthsGrid
         {
             id: _monthPage
             selectedMonth: control.selectedMonth
             onMonthSelected: (month) => control.updateSelectedDate(control.selectedDay, month, control.selectedYear)
         }
         
-        Calendar.YearsGrid
+        MauiCalendar.YearsGrid
         {
             id: _yearPane
             selectedYear: control.selectedYear

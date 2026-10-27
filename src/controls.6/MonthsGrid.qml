@@ -3,7 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Controls 
 
 import org.mauikit.controls as Maui
-import org.mauikit.calendar as Calendar
+import org.mauikit.calendar 1.0 as MauiCalendar
 
 /**
  * @inherit QtQuick.Controls.Page
@@ -12,7 +12,7 @@ import org.mauikit.calendar as Calendar
  * @image html monthsgrid.png
  *
  * @code
- * MC.MonthsGrid
+ * MauiCalendar.MonthsGrid
  * {
  *    id: _view
  *    anchors.centerIn: parent
@@ -49,7 +49,7 @@ Page
         
         ButtonGroup
         {
-            buttons: monthsGrid.children
+            id: _monthButtonGroup
         }
         
         Repeater
@@ -63,6 +63,7 @@ Page
                 
                 checkable: true
                 checked: control.selectedMonth === index
+                ButtonGroup.group: _monthButtonGroup
                 
                 onClicked:
                 {

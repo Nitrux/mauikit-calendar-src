@@ -33,7 +33,7 @@ QVariant TimeZoneListModel::data(const QModelIndex &idx, int role) const
     auto timeZone = m_timeZones[idx.row()];
     switch (role) {
     case Qt::DisplayRole:
-        return i18n(timeZone.replace('_', ' ').constData());
+        return timeZone.isEmpty() ? QString() : i18n(timeZone.replace('_', ' ').constData());
     case IdRole:
         return timeZone;
     default:

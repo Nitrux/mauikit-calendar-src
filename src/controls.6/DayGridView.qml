@@ -8,7 +8,7 @@ import QtQuick.Layouts
 import QtQuick.Controls as QQC2
 import org.mauikit.controls as Maui
 
-import org.mauikit.calendar as Calendar
+import org.mauikit.calendar 1.0 as MauiCalendar
 import "dateutils.js" as DateUtils
 import "labelutils.js" as LabelUtils
 
@@ -62,7 +62,7 @@ QQC2.Pane
     property int dayHeight: ((height - topPadding - bottomPadding - bgLoader.dayLabelsBar.height) / numberOfRows) - spacing
 
     readonly property bool isDark: CalendarUiUtils.darkMode
-    //    readonly property int mode: Calendar.CalendarApplication.Event
+    //    readonly property int mode: MauiCalendar.CalendarApplication.Event
 
     //    implicitHeight: (numberOfRows > 1 ? Maui.Style.units.gridUnit * 10 * numberOfRows : numberOfLinesShown * Maui.Style.units.gridUnit) + bgLoader.dayLabelsBar.height +topPadding + bottomPadding
     //    height: implicitHeight
@@ -85,7 +85,7 @@ QQC2.Pane
             spacing: root.spacing
 
             property alias dayLabelsBar: dayLabelsBarComponent
-            Calendar.DayLabelsBar
+            MauiCalendar.DayLabelsBar
             {
                 id: dayLabelsBarComponent
                 delegate: root.dayHeaderDelegate
@@ -226,11 +226,11 @@ QQC2.Pane
 
                                                 Repeater
                                                 {
-                                                    model: Calendar.IncidenceOccurrenceModel
+                                                    model: MauiCalendar.IncidenceOccurrenceModel
                                                     {
                                                         start: gridItem.date
                                                         length: 0
-                                                        filter: Calendar.Filter
+                                                        filter: MauiCalendar.Filter
                                                     }
 
 

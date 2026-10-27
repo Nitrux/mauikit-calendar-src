@@ -4,12 +4,13 @@
 pragma Singleton
 
 import QtQuick
+import QtQml
 
 import org.mauikit.controls as Maui
 
 import "dateutils.js" as DateUtils
 import "labelutils.js" as LabelUtils
-import org.mauikit.calendar 
+import org.mauikit.calendar 1.0
 
 /**
  *  Coordinates common calendar navigation and incidence-editing workflows.

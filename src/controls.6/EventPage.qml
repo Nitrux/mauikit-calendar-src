@@ -3,7 +3,7 @@ import QtQml
 import QtQuick.Controls
 import QtQuick.Layouts
 import org.mauikit.controls as Maui
-import org.mauikit.calendar as Cal
+import org.mauikit.calendar 1.0 as MauiCalendar
 
 /**
  * @inherit QtQuick.Controls.Pane
@@ -23,7 +23,7 @@ Pane
      */
     property alias incidence : incidenceWrapper
 
-    Cal.IncidenceWrapper
+    MauiCalendar.IncidenceWrapper
     {
         id: incidenceWrapper
 
@@ -78,7 +78,7 @@ Pane
                     Layout.fillWidth: true
                     textRole: "display"
 
-                    model: Cal.CollectionComboBoxModel
+                    model: MauiCalendar.CollectionComboBoxModel
                     {
                         id: collectionComboBoxModel
                         onCurrentIndexChanged: calendarCombo.currentIndex = currentIndex
@@ -122,7 +122,7 @@ Pane
             {
                 label1.text: i18n("Start")
 
-                Cal.DateComboBox
+                MauiCalendar.DateComboBox
                 {
                     id: incidenceStartDateCombo
                     Layout.fillWidth: true
@@ -134,7 +134,7 @@ Pane
                     }
                 }
 
-                Cal.TimeComboBox
+                MauiCalendar.TimeComboBox
                 {
                     id: incidenceStartTimeCombo
                     Layout.fillWidth: true
@@ -154,7 +154,7 @@ Pane
             {
                 label1.text: i18n("End")
 
-                Cal.DateComboBox
+                MauiCalendar.DateComboBox
                 {
                     id: incidenceEndDateCombo
                     Layout.fillWidth: true
@@ -166,7 +166,7 @@ Pane
                     }
                 }
 
-                Cal.TimeComboBox
+                MauiCalendar.TimeComboBox
                 {
                     id: incidenceEndTimeCombo
                     Layout.fillWidth: true
@@ -188,7 +188,7 @@ Pane
                 ComboBox
                 {
                     Layout.fillWidth: true
-                    model: Cal.TimeZoneListModel
+                    model: MauiCalendar.TimeZoneListModel
                     {
                         id: timeZonesModel
                     }

@@ -3,7 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Controls
 
 import org.mauikit.controls as Maui
-import org.mauikit.calendar as Calendar
+import org.mauikit.calendar 1.0 as MauiCalendar
 
 /**
  * @inherit QtQuick.Controls.Page
@@ -12,7 +12,7 @@ import org.mauikit.calendar as Calendar
  * @image html timepicker.png
  * 
  * @code
- *  MC.TimePicker
+ *  MauiCalendar.TimePicker
  * {
  *    id: _view
  *    anchors.fill: parent

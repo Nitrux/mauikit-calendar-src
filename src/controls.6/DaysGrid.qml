@@ -3,7 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Controls 
 
 import org.mauikit.controls as Maui
-import org.mauikit.calendar as Calendar
+import org.mauikit.calendar 1.0 as MauiCalendar
 
 import "dateutils.js" as DateUtils
 
@@ -25,7 +25,7 @@ import "dateutils.js" as DateUtils
  *        Maui.Controls.showCSD: true
  *        title: root.title
  * 
- *        MC.DaysGrid
+ *        MauiCalendar.DaysGrid
  *        {
  *            id: _daysGrid
  *            height: 300
@@ -81,7 +81,7 @@ Page
     
     padding: control.compact ? Maui.Style.space.small : Maui.Style.defaultPadding    
     
-    Calendar.MonthModel
+    MauiCalendar.MonthModel
     {
         id: _monthModel
     }
@@ -100,7 +100,7 @@ Page
         
         ButtonGroup 
         {
-            buttons: _daysGrid.children
+            id: _dayButtonGroup
         }
         
         Repeater
@@ -121,6 +121,7 @@ Page
                 
                 checkable: true
                 checked: model.isToday
+                ButtonGroup.group: _dayButtonGroup
                 
                 opacity: sameMonth ? 1 : 0.7
                 

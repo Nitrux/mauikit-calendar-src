@@ -216,8 +216,10 @@ QVariant IncidenceOccurrenceModel::data(const QModelIndex &idx, int role) const
         return incidence->uid();
     case IncidenceType:
         return incidence->type();
-    case IncidenceTypeStr:
-        return incidence->type() == KCalendarCore::Incidence::TypeTodo ? i18n("Task") : i18n(incidence->typeStr().constData());
+    case IncidenceTypeStr: {
+        const auto type = incidence->typeStr();
+        return incidence->type() == KCalendarCore::Incidence::TypeTodo ? i18n("Task") : type.isEmpty() ? QString() : i18n(type.constData());
+    }
     case IncidenceTypeIcon:
         return incidence->iconName();
     case IncidencePtr:

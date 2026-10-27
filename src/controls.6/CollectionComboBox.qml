@@ -3,7 +3,7 @@
 
 import QtQuick
 import QtQuick.Controls 
-import org.mauikit.calendar as Cal
+import org.mauikit.calendar 1.0 as MauiCalendar
 import org.mauikit.controls as Maui
 
 /**
@@ -28,10 +28,10 @@ ComboBox
      *
      * @property list<string> mimeTypeFilter
      * @code{.qml}
-     * import org.mauikit.calendar 1.0 as Cal
+     * import org.mauikit.calendar 1.0 as MauiCalendar
      * 
-     * Cal.CollectionComboBoxModel {
-     *     mimeTypeFilter: [Cal.MimeTypes.address, Cal.MimeTypes.contactGroup]
+     * MauiCalendar.CollectionComboBoxModel {
+     *     mimeTypeFilter: [MauiCalendar.MimeTypes.address, MauiCalendar.MimeTypes.contactGroup]
      * }
      * @endcode
      */
@@ -41,12 +41,12 @@ ComboBox
      * This property holds the access right of the collection that should be
      * displayed.
      *
-     * @property Cal::Collection::Rights rights
+     * @property Calendar::Collection::Rights rights
      * @code{.qml}
-     * import org.mauikit.calendar 1.0 as Cal
+     * import org.mauikit.calendar 1.0 as MauiCalendar
      * 
-     * Cal.CollectionComboBoxModel {
-     *     accessRightsFilter: Cal.Collection.CanCreateItem
+     * MauiCalendar.CollectionComboBoxModel {
+     *     accessRightsFilter: MauiCalendar.Collection.CanCreateItem
      * }
      * @endcode
      */
@@ -57,7 +57,7 @@ ComboBox
     currentIndex: 0
     onActivated: if (index > -1) {
         const selectedModelIndex = collectionComboBoxModel.index(currentIndex, 0);
-        const selectedCollection = collectionComboBoxModel.data(selectedModelIndex, Cal.Collection.CollectionRole);
+        const selectedCollection = collectionComboBoxModel.data(selectedModelIndex, MauiCalendar.Collection.CollectionRole);
         userSelectedCollection(selectedCollection);
     }
 
@@ -69,7 +69,7 @@ ComboBox
 
         // Make sure to check the currentValue property directly or risk listening to something that won't necessarily emit a changed() signal'
         readonly property var selectedModelIndex: comboBox.currentValue > -1 ? comboBox.model.index(comboBox.currentIndex, 0) : null
-        readonly property var selectedCollectionColor: comboBox.currentValue > -1 ? comboBox.model.data(selectedModelIndex, Cal.Collection.CollectionColorRole) : null
+        readonly property var selectedCollectionColor: comboBox.currentValue > -1 ? comboBox.model.data(selectedModelIndex, MauiCalendar.Collection.CollectionColorRole) : null
 
         implicitHeight: comboBox.implicitHeight * 0.4
         implicitWidth: implicitHeight
@@ -81,7 +81,7 @@ ComboBox
         color: selectedCollectionColor
     }
 
-    model: Cal.CollectionComboBoxModel {
+    model: MauiCalendar.CollectionComboBoxModel {
         id: collectionComboBoxModel
         onCurrentIndexChanged: comboBox.currentIndex = currentIndex
     }
