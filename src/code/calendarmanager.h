@@ -48,7 +48,6 @@ class CALENDAR_EXPORT CalendarManager : public QObject
     Q_PROPERTY(bool loading READ loading NOTIFY loadingChanged)
     Q_PROPERTY(QAbstractItemModel *collections READ collections CONSTANT)
     Q_PROPERTY(QStringList subscriptions READ subscriptions NOTIFY subscriptionsChanged)
-    Q_PROPERTY(QVariantList caldavAccounts READ caldavAccounts NOTIFY caldavAccountsChanged)
     Q_PROPERTY(QVariantList caldavPermissions READ caldavPermissions NOTIFY caldavPermissionsChanged)
     Q_PROPERTY(qint64 caldavPermissionsCollectionId READ caldavPermissionsCollectionId NOTIFY caldavPermissionsChanged)
 
@@ -65,7 +64,6 @@ public:
     bool loading() const;
     QAbstractItemModel *collections();
     QStringList subscriptions() const;
-    QVariantList caldavAccounts() const;
     QVariantList caldavPermissions() const;
     qint64 caldavPermissionsCollectionId() const;
     KCalendarCore::MemoryCalendar::Ptr calendar() const;
@@ -85,12 +83,10 @@ public:
     Q_INVOKABLE bool addCollection(const QString &name);
     Q_INVOKABLE bool removeCollection(qint64 collectionId);
     Q_INVOKABLE void syncCalDav(const QString &url, const QString &username = {}, const QString &password = {}, qint64 collectionId = -1);
-    Q_INVOKABLE bool saveCalDavAccount(const QString &url, const QString &username, const QString &secret, bool enabled = true, const QString &authentication = QStringLiteral("basic"), const QString &refreshToken = {}, const QString &tokenUrl = {}, const QString &clientId = {}, const QString &clientSecret = {}, const QString &authorizationUrl = {});
     Q_INVOKABLE bool startCalDavOAuthAuthorization(const QString &calendarUrl, const QString &authorizationUrl, const QString &tokenUrl, const QString &clientId, const QString &clientSecret = {});
     Q_INVOKABLE bool isCalDavCollection(qint64 collectionId) const;
     Q_INVOKABLE void loadCalDavPermissions(qint64 collectionId);
     Q_INVOKABLE bool saveCalDavPermissions(const QVariantList &permissions);
-    Q_INVOKABLE bool removeCalDavAccount(const QString &url);
     Q_INVOKABLE void resolveSyncConflict(const QString &uid, bool keepLocal);
     Q_SCRIPTABLE Q_INVOKABLE QStringList upcomingEvents(int days = 7) const;
     Q_SCRIPTABLE Q_INVOKABLE QStringList eventsForDate(const QString &date) const;
@@ -106,7 +102,6 @@ Q_SIGNALS:
     void loadingChanged();
     void calendarChanged();
     void subscriptionsChanged();
-    void caldavAccountsChanged();
     void caldavPermissionsChanged();
     void caldavPermissionsError(const QString &message);
     void caldavPermissionsSaved();
@@ -128,7 +123,7 @@ private:
     void uploadCalDav(const QString &url, const QString &username, const QString &password, qint64 collectionId = -1);
     void saveCollectionNames() const;
     void saveCollectionColors() const;
-    void saveCalDavAccounts() const;
+    void saveCalDavAccounts();
     void syncSavedCalDavAccounts();
     void syncCalDavAccount(const QVariantMap &account);
     void refreshCalDavToken(const QVariantMap &account);
@@ -169,6 +164,7 @@ private:
     QVariantList m_caldavPermissions;
     qint64 m_caldavPermissionsCollectionId = -1;
     QTimer *m_caldavTimer = nullptr;
+    bool m_syncingAccounts = false;
     QTcpServer *m_oauthServer = nullptr;
     QString m_oauthCalendarUrl;
     QString m_oauthAuthorizationUrl;

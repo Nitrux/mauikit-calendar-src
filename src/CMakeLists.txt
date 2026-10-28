@@ -117,6 +117,7 @@ target_link_libraries(MauiKitCalendar${MAUI_MAJOR_VERSION}
     KF${KF_MAJOR_VERSION}::CalendarCore
     PRIVATE
     MauiKit${MAUI_MAJOR_VERSION}
+    MauiKit${MAUI_MAJOR_VERSION}::Accounts
     Qt${QT_MAJOR_VERSION}::Core
     Qt${QT_MAJOR_VERSION}::Gui
     Qt${QT_MAJOR_VERSION}::Quick
