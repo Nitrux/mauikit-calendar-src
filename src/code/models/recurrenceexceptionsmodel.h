@@ -5,11 +5,12 @@
 
 #include <KCalendarCore/Calendar>
 #include <QAbstractListModel>
+#include "calendar_export.h"
 
 /**
  *  Lists and edits exception dates for a recurring incidence.
  */
-class RecurrenceExceptionsModel : public QAbstractListModel
+class CALENDAR_EXPORT RecurrenceExceptionsModel : public QAbstractListModel
 {
     Q_OBJECT
     Q_PROPERTY(KCalendarCore::Incidence::Ptr incidencePtr READ incidencePtr WRITE setIncidencePtr NOTIFY incidencePtrChanged)

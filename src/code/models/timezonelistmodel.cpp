@@ -19,10 +19,16 @@ TimeZoneListModel::TimeZoneListModel(QObject *parent)
     std::copy(lstTimeZoneIds.begin(), lstTimeZoneIds.end(), std::back_inserter(m_timeZones));
     std::sort(m_timeZones.begin(), m_timeZones.end()); // clazy:exclude=detaching-member
 
-    // Prepend Local, UTC and Floating, for convenience
-    m_timeZones.prepend("UTC"); // do not use i18n here  index=2
-    m_timeZones.prepend("Floating"); // do not use i18n here  index=1
-    m_timeZones.prepend(QTimeZone::systemTimeZoneId()); // index=0
+    // Prepend Local, UTC and Floating, for convenience.
+    m_timeZones.removeAll("UTC");
+    m_timeZones.removeAll("Floating");
+    m_timeZones.prepend("UTC");
+    m_timeZones.prepend("Floating");
+    const auto localTimeZone = QTimeZone::systemTimeZoneId();
+    if (!localTimeZone.isEmpty() && localTimeZone != "UTC" && localTimeZone != "Floating") {
+        m_timeZones.removeAll(localTimeZone);
+        m_timeZones.prepend(localTimeZone);
+    }
 }
 
 QVariant TimeZoneListModel::data(const QModelIndex &idx, int role) const
@@ -33,6 +39,7 @@ QVariant TimeZoneListModel::data(const QModelIndex &idx, int role) const
     auto timeZone = m_timeZones[idx.row()];
     switch (role) {
     case Qt::DisplayRole:
+        if (timeZone == "Floating") return i18n("Auto");
         return timeZone.isEmpty() ? QString() : i18n(timeZone.replace('_', ' ').constData());
     case IdRole:
         return timeZone;

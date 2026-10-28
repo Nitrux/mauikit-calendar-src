@@ -6,6 +6,7 @@
 #include <KCalendarCore/Calendar>
 #include <QAbstractItemModel>
 #include <QDebug>
+#include "calendar_export.h"
 
 /**
  * This class provides a QAbstractItemModel for an incidences' reminders/alarms.
@@ -21,7 +22,7 @@
 /**
  *  Lists and edits the reminder alarms attached to an incidence.
  */
-class RemindersModel : public QAbstractListModel
+class CALENDAR_EXPORT RemindersModel : public QAbstractListModel
 {
     Q_OBJECT
     Q_PROPERTY(KCalendarCore::Incidence::Ptr incidencePtr READ incidencePtr WRITE setIncidencePtr NOTIFY incidencePtrChanged)

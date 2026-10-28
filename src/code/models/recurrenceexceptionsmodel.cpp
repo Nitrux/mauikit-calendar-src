@@ -93,11 +93,10 @@ void RecurrenceExceptionsModel::addExceptionDateTime(QDateTime date)
         return;
     }
 
-    // I don't know why, but different types take different date formats
     if (m_incidence->recurrence()->allDay()) {
-        m_incidence->recurrence()->addExDateTime(date);
-    } else {
         m_incidence->recurrence()->addExDate(date.date());
+    } else {
+        m_incidence->recurrence()->addExDateTime(date);
     }
 
     updateExceptions();
@@ -110,27 +109,12 @@ void RecurrenceExceptionsModel::deleteExceptionDateTime(QDateTime date)
     }
 
     if (m_incidence->recurrence()->allDay()) {
-        auto dateTimes = m_incidence->recurrence()->exDateTimes();
-        dateTimes.removeAt(dateTimes.indexOf(date));
-        m_incidence->recurrence()->setExDateTimes(dateTimes);
-    } else {
         auto dates = m_incidence->recurrence()->exDates();
-        int removeIndex = dates.indexOf(date.date());
-
-        if (removeIndex >= 0) {
-            dates.removeAt(dates.indexOf(date.date()));
-            m_incidence->recurrence()->setExDates(dates);
-            updateExceptions();
-            return;
-        }
-
+        dates.removeAll(date.date());
+        m_incidence->recurrence()->setExDates(dates);
+    } else {
         auto dateTimes = m_incidence->recurrence()->exDateTimes();
-
-        for (int i = 0; i < dateTimes.size(); i++) {
-            if (dateTimes[i].date() == date.date()) {
-                dateTimes.removeAt(i);
-            }
-        }
+        dateTimes.removeAll(date);
         m_incidence->recurrence()->setExDateTimes(dateTimes);
     }
 

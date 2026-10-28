@@ -9,6 +9,8 @@ CollectionComboBoxModel::CollectionComboBoxModel(QObject *parent)
     : QAbstractListModel(parent)
 {
     m_calendars.append({i18n("Personal"), QColor(0x1d, 0x99, 0xf3)}); // default blue
+    m_calendars.append({i18n("Work"), QColor(0x52, 0xb7, 0x88)});
+    m_calendars.append({i18n("Shared"), QColor(0xd8, 0x9b, 0x4a)});
 }
 
 int CollectionComboBoxModel::rowCount(const QModelIndex &parent) const

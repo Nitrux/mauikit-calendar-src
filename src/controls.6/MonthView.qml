@@ -341,6 +341,10 @@ Pane
     function setToDate(date, isInitialMonth = true)
     {
         control.initialMonth = isInitialMonth;
+        if (!pathView.currentItem) {
+            Qt.callLater(function() { setToDate(date, isInitialMonth) })
+            return
+        }
         let monthDiff = date.getMonth() - pathView.currentItem.firstDayOfMonth.getMonth() + (12 * (date.getFullYear() - pathView.currentItem.firstDayOfMonth.getFullYear()))
         let newIndex = pathView.currentIndex + monthDiff;
         

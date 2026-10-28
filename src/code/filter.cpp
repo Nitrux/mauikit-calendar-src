@@ -13,6 +13,11 @@ QStringList Filter::tags() const
     return m_tags;
 }
 
+QStringList Filter::collectionIds() const
+{
+    return m_collectionIds;
+}
+
 QString Filter::name() const
 {
     return m_name;
@@ -34,6 +39,21 @@ void Filter::setTags(QStringList tags)
     }
     m_tags = tags;
     Q_EMIT tagsChanged();
+}
+
+void Filter::setCollectionIds(QStringList collectionIds)
+{
+    if (m_collectionIds == collectionIds) return;
+    m_collectionIds = collectionIds;
+    Q_EMIT collectionIdsChanged();
+}
+
+void Filter::toggleCollection(qint64 collectionId)
+{
+    const auto id = QString::number(collectionId);
+    if (m_collectionIds.contains(id)) m_collectionIds.removeAll(id);
+    else m_collectionIds.append(id);
+    Q_EMIT collectionIdsChanged();
 }
 
 void Filter::setName(const QString &name)
@@ -67,4 +87,5 @@ void Filter::reset()
     setName({});
     setTags({});
     setCollectionId(-1);
+    setCollectionIds({});
 }

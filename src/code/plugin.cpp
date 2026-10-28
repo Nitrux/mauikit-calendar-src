@@ -12,6 +12,8 @@
 #include "models/monthmodel.h"
 #include "models/multidayincidencemodel.h"
 #include "models/timezonelistmodel.h"
+#include "models/remindersmodel.h"
+#include "models/recurrenceexceptionsmodel.h"
 
 #include <QJSEngine>
 #include <QQmlEngine>
@@ -38,4 +40,6 @@ void MauiCalendarPlugin::registerTypes(const char *uri)
     qmlRegisterType<MonthModel>(uri, 1, 0, "MonthModel");
     qmlRegisterType<MultiDayIncidenceModel>(uri, 1, 0, "MultiDayIncidenceModel");
     qmlRegisterType<TimeZoneListModel>(uri, 1, 0, "TimeZoneListModel");
+    qmlRegisterType<RemindersModel>(uri, 1, 0, "RemindersModel");
+    qmlRegisterType<RecurrenceExceptionsModel>(uri, 1, 0, "RecurrenceExceptionsModel");
 }

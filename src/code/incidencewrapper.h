@@ -8,6 +8,7 @@
 #include <KCalendarCore/Calendar>
 #include <KFormat>
 #include <QByteArray>
+#include <QVariantList>
 #include <QObject>
 #include <QQmlEngine>
 #include "calendar_export.h"
@@ -56,6 +57,9 @@ class CALENDAR_EXPORT IncidenceWrapper : public QObject
     Q_PROPERTY(QString durationDisplayString READ durationDisplayString NOTIFY durationDisplayStringChanged)
     Q_PROPERTY(bool allDay READ allDay WRITE setAllDay NOTIFY allDayChanged)
     Q_PROPERTY(int priority READ priority WRITE setPriority NOTIFY priorityChanged)
+    Q_PROPERTY(bool hasReminders READ hasReminders NOTIFY remindersChanged)
+    Q_PROPERTY(int reminderMinutes READ reminderMinutes NOTIFY remindersChanged)
+    Q_PROPERTY(QVariantList reminders READ reminders NOTIFY remindersChanged)
 
     Q_PROPERTY(KCalendarCore::Recurrence *recurrence READ recurrence NOTIFY incidencePtrChanged)
     Q_PROPERTY(QVariantMap recurrenceData READ recurrenceData NOTIFY recurrenceDataChanged)
@@ -146,6 +150,9 @@ public:
     void setAllDay(bool allDay);
     int priority() const;
     void setPriority(int priority);
+    bool hasReminders() const;
+    int reminderMinutes() const;
+    QVariantList reminders() const;
 
     KCalendarCore::Recurrence *recurrence() const;
     QVariantMap recurrenceData();
@@ -162,9 +169,18 @@ public:
     Q_INVOKABLE void setNewEvent();
     Q_INVOKABLE void setNewTodo();
     Q_INVOKABLE void addAlarms(KCalendarCore::Alarm::List alarms);
+    Q_INVOKABLE void setReminderMinutes(int minutes);
+    Q_INVOKABLE void addReminderMinutes(int minutes);
+    Q_INVOKABLE void setReminderMinutesAt(int index, int minutes);
+    Q_INVOKABLE void setReminderTimeAt(int index, const QDateTime &time);
+    Q_INVOKABLE void removeReminderAt(int index);
+    Q_INVOKABLE void clearReminders();
     Q_INVOKABLE void setRegularRecurrence(IncidenceWrapper::RecurrenceIntervals interval, int freq = 1);
     Q_INVOKABLE void setMonthlyPosRecurrence(short pos, int day);
+    Q_INVOKABLE void setMonthlyPositionRecurrence(int position, int weekday);
     Q_INVOKABLE void setRecurrenceOccurrences(int occurrences);
+    Q_INVOKABLE void setRecurrenceEndDate(const QDate &date);
+    Q_INVOKABLE void clearRecurrenceEnd();
     Q_INVOKABLE void clearRecurrences();
 
     QString googleConferenceUrl();
@@ -198,6 +214,7 @@ Q_SIGNALS:
     void durationDisplayStringChanged();
     void allDayChanged();
     void priorityChanged();
+    void remindersChanged();
 
     void recurrenceDataChanged();
     void organizerChanged();

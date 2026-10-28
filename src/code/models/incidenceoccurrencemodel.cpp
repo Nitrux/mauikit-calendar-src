@@ -63,7 +63,12 @@ Filter *IncidenceOccurrenceModel::filter() const
 
 void IncidenceOccurrenceModel::setFilter(Filter *filter)
 {
+    if (mFilter) disconnect(mFilter, nullptr, this, nullptr);
     mFilter = filter;
+    if (mFilter) {
+        connect(mFilter, &Filter::collectionIdsChanged, this, &IncidenceOccurrenceModel::scheduleReset);
+        connect(mFilter, &Filter::nameChanged, this, &IncidenceOccurrenceModel::scheduleReset);
+    }
     Q_EMIT filterChanged();
     scheduleReset();
 }
@@ -134,8 +139,8 @@ void IncidenceOccurrenceModel::resetFromSource()
             occurrenceStartEnd.first,
             occurrenceStartEnd.second,
             incidence,
-            QColor(),
-            0,
+            CalendarManager::instance()->collectionColor(incidence->customProperty("MauiCalendar", "CollectionId").toLongLong()),
+            incidence->customProperty("MauiCalendar", "CollectionId").toLongLong(),
             incidence->allDay(),
         };
         m_incidences.append(occurrence);
@@ -211,7 +216,7 @@ QVariant IncidenceOccurrenceModel::data(const QModelIndex &idx, int role) const
         return todo->isOverdue();
     }
     case IsReadOnly:
-        return false;
+        return CalendarManager::instance()->isCollectionReadOnly(occurrence.collectionId);
     case IncidenceId:
         return incidence->uid();
     case IncidenceType:
@@ -285,6 +290,9 @@ bool IncidenceOccurrenceModel::incidencePassesFilter(const KCalendarCore::Incide
         return true;
     }
     if (!mFilter->name().isEmpty() && !incidence->summary().contains(mFilter->name(), Qt::CaseInsensitive)) {
+        return false;
+    }
+    if (mFilter->collectionIds().contains(incidence->customProperty("MauiCalendar", "CollectionId"))) {
         return false;
     }
     return true;

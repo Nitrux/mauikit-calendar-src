@@ -5,8 +5,52 @@
 #include <QBitArray>
 #include <QJSValue>
 #include <QDebug>
+#include <QTimeZone>
 #include <incidencewrapper.h>
 #include "calendarmanager.h"
+
+namespace {
+
+QByteArray incidenceTimeZoneId(const KCalendarCore::Incidence::Ptr &incidence)
+{
+    const auto stored = incidence->customProperty("MauiCalendar", "TimeZone");
+    if (!stored.isEmpty()) return stored.toUtf8();
+    const auto id = incidence->dtStart().timeZone().id();
+    return id.isEmpty() ? QTimeZone::systemTimeZoneId() : id;
+}
+
+QDateTime incidenceDisplayDateTime(const KCalendarCore::Incidence::Ptr &incidence, const QDateTime &stored)
+{
+    if (!stored.isValid() || incidence->allDay()) return stored;
+    const auto zoneId = incidenceTimeZoneId(incidence);
+    if (zoneId == QByteArrayLiteral("Floating")) return stored.toLocalTime();
+    const QTimeZone zone(zoneId);
+    return zone.isValid() ? stored.toTimeZone(zone) : stored.toLocalTime();
+}
+
+QDateTime incidenceStoredDateTime(const KCalendarCore::Incidence::Ptr &incidence, const QDateTime &display)
+{
+    if (!display.isValid() || incidence->allDay()) return display;
+    if (incidenceTimeZoneId(incidence) == QByteArrayLiteral("Floating")) return display.toLocalTime();
+    return display.toUTC();
+}
+
+QDateTime incidenceWallDateTime(const IncidenceWrapper *wrapper, const QDate &date, const QTime &time)
+{
+    QDateTime result;
+    const auto zoneId = wrapper->timeZone();
+    if (zoneId == QByteArrayLiteral("Floating")) {
+        result.setTimeZone(QTimeZone::systemTimeZone());
+    } else {
+        const QTimeZone zone(zoneId);
+        if (zone.isValid()) result.setTimeZone(zone);
+    }
+    result.setDate(date);
+    result.setTime(time);
+    return result;
+}
+
+}
 
 IncidenceWrapper::IncidenceWrapper(QObject *parent)
     : QObject(parent)
@@ -46,6 +90,7 @@ void IncidenceWrapper::notifyDataChanged()
     Q_EMIT durationDisplayStringChanged();
     Q_EMIT allDayChanged();
     Q_EMIT priorityChanged();
+    Q_EMIT remindersChanged();
     Q_EMIT organizerChanged();
     Q_EMIT recurrenceDataChanged();
     Q_EMIT todoCompletedChanged();
@@ -87,12 +132,14 @@ QString IncidenceWrapper::uid() const
 
 qint64 IncidenceWrapper::collectionId() const
 {
-    return m_collectionId;
+    const auto storedId = m_incidence->customProperty("MauiCalendar", "CollectionId");
+    return storedId.isEmpty() ? m_collectionId : storedId.toLongLong();
 }
 
 void IncidenceWrapper::setCollectionId(qint64 collectionId)
 {
     m_collectionId = collectionId;
+    if (m_incidence) m_incidence->setCustomProperty("MauiCalendar", "CollectionId", QString::number(collectionId));
     Q_EMIT collectionIdChanged();
 }
 
@@ -184,31 +231,24 @@ float IncidenceWrapper::geoLongitude() const
 
 QDateTime IncidenceWrapper::incidenceStart() const
 {
-    return m_incidence->dtStart();
+    return incidenceDisplayDateTime(m_incidence, m_incidence->dtStart());
 }
 
 void IncidenceWrapper::setIncidenceStart(const QDateTime &incidenceStart, bool respectTimeZone)
 {
-    auto oldStart = this->incidenceStart();
-
-    if (respectTimeZone) {
-        m_incidence->setDtStart(incidenceStart);
-        auto newTzEnd = incidenceEnd();
-        newTzEnd.setTimeZone(incidenceStart.timeZone());
-        setIncidenceEnd(newTzEnd, true);
-    } else {
-        const auto date = incidenceStart.date();
-        const auto time = incidenceStart.time();
-        QDateTime start;
-        start.setTimeZone(QTimeZone(timeZone()));
-        start.setDate(date);
-        start.setTime(time);
-        m_incidence->setDtStart(start);
+    const auto oldStart = this->incidenceStart();
+    const auto oldDuration = oldStart.secsTo(incidenceEnd());
+    QDateTime displayStart = incidenceStart;
+    if (respectTimeZone && timeZone() != QByteArrayLiteral("Floating")) {
+        const QTimeZone zone(timeZone());
+        if (zone.isValid()) displayStart = incidenceStart.toTimeZone(zone);
+    } else if (!respectTimeZone) {
+        displayStart = incidenceWallDateTime(this, incidenceStart.date(), incidenceStart.time());
     }
+    m_incidence->setDtStart(incidenceStoredDateTime(m_incidence, displayStart));
 
-    auto oldStartEndDifference = oldStart.secsTo(incidenceEnd());
-    auto newEnd = this->incidenceStart().addSecs(oldStartEndDifference);
-    setIncidenceEnd(newEnd);
+    const auto newEnd = this->incidenceStart().addSecs(oldDuration);
+    setIncidenceEnd(newEnd, true);
 
     Q_EMIT incidenceStartChanged();
     Q_EMIT incidenceStartDateDisplayChanged();
@@ -249,26 +289,24 @@ QDateTime IncidenceWrapper::incidenceEnd() const
 {
     if (m_incidence->type() == KCalendarCore::Incidence::IncidenceType::TypeEvent) {
         KCalendarCore::Event::Ptr event = m_incidence.staticCast<KCalendarCore::Event>();
-        return event->dtEnd();
+        return incidenceDisplayDateTime(m_incidence, event->dtEnd());
     } else if (m_incidence->type() == KCalendarCore::Incidence::IncidenceType::TypeTodo) {
         KCalendarCore::Todo::Ptr todo = m_incidence.staticCast<KCalendarCore::Todo>();
-        return todo->dtDue();
+        return incidenceDisplayDateTime(m_incidence, todo->dtDue());
     }
     return {};
 }
 
 void IncidenceWrapper::setIncidenceEnd(const QDateTime &incidenceEnd, bool respectTimeZone)
 {
-    QDateTime end;
-    if (respectTimeZone) {
-        end = incidenceEnd;
-    } else {
-        const auto date = incidenceEnd.date();
-        const auto time = incidenceEnd.time();
-        end.setTimeZone(QTimeZone(timeZone()));
-        end.setDate(date);
-        end.setTime(time);
+    QDateTime displayEnd = incidenceEnd;
+    if (respectTimeZone && timeZone() != QByteArrayLiteral("Floating")) {
+        const QTimeZone zone(timeZone());
+        if (zone.isValid()) displayEnd = incidenceEnd.toTimeZone(zone);
+    } else if (!respectTimeZone) {
+        displayEnd = incidenceWallDateTime(this, incidenceEnd.date(), incidenceEnd.time());
     }
+    const auto end = incidenceStoredDateTime(m_incidence, displayEnd);
 
     if (m_incidence->type() == KCalendarCore::Incidence::IncidenceType::TypeEvent) {
         KCalendarCore::Event::Ptr event = m_incidence.staticCast<KCalendarCore::Event>();
@@ -331,19 +369,27 @@ void IncidenceWrapper::setIncidenceTimeToNearestQuarterHour(bool setStartTime, b
 
 QByteArray IncidenceWrapper::timeZone() const
 {
-    return incidenceEnd().timeZone().id();
+    const auto storedTimeZone = m_incidence->customProperty("MauiCalendar", "TimeZone");
+    return storedTimeZone.isEmpty() ? incidenceEnd().timeZone().id() : storedTimeZone.toUtf8();
 }
 
 void IncidenceWrapper::setTimeZone(const QByteArray &timeZone)
 {
+    const bool floating = timeZone == QByteArrayLiteral("Floating");
+    const auto zone = floating ? QTimeZone::systemTimeZone() : QTimeZone(timeZone);
+    if (!floating && !zone.isValid()) return;
+
     QDateTime start(incidenceStart());
+    QDateTime end(incidenceEnd());
+    m_incidence->setCustomProperty("MauiCalendar", "TimeZone", QString::fromUtf8(timeZone));
     if (start.isValid()) {
-        start.setTimeZone(QTimeZone(timeZone));
+        if (floating) start = QDateTime(start.date(), start.time(), QTimeZone::systemTimeZone());
+        else start = start.toTimeZone(zone);
         setIncidenceStart(start, true);
     }
-    QDateTime end(incidenceEnd());
     if (end.isValid()) {
-        end.setTimeZone(QTimeZone(timeZone));
+        if (floating) end = QDateTime(end.date(), end.time(), QTimeZone::systemTimeZone());
+        else end = end.toTimeZone(zone);
         setIncidenceEnd(end, true);
     }
     Q_EMIT timeZoneChanged();
@@ -353,12 +399,14 @@ void IncidenceWrapper::setTimeZone(const QByteArray &timeZone)
 
 int IncidenceWrapper::startTimeZoneUTCOffsetMins()
 {
-    return QTimeZone(timeZone()).offsetFromUtc(incidenceStart());
+    const auto zone = timeZone();
+    return zone == QByteArrayLiteral("Floating") ? 0 : QTimeZone(zone).offsetFromUtc(incidenceStart());
 }
 
 int IncidenceWrapper::endTimeZoneUTCOffsetMins()
 {
-    return QTimeZone(timeZone()).offsetFromUtc(incidenceEnd());
+    const auto zone = timeZone();
+    return zone == QByteArrayLiteral("Floating") ? 0 : QTimeZone(zone).offsetFromUtc(incidenceEnd());
 }
 
 KCalendarCore::Duration IncidenceWrapper::duration() const
@@ -404,6 +452,36 @@ void IncidenceWrapper::setPriority(int priority)
 {
     m_incidence->setPriority(priority);
     Q_EMIT priorityChanged();
+}
+
+bool IncidenceWrapper::hasReminders() const
+{
+    return !m_incidence->alarms().isEmpty();
+}
+
+int IncidenceWrapper::reminderMinutes() const
+{
+    const auto alarms = m_incidence->alarms();
+    if (alarms.isEmpty()) {
+        return 0;
+    }
+    return qMax(0, static_cast<int>(-alarms.constFirst()->startOffset().asSeconds() / 60));
+}
+
+QVariantList IncidenceWrapper::reminders() const
+{
+    QVariantList result;
+    for (const auto &alarm : m_incidence->alarms()) {
+        const auto time = alarm->time();
+        const auto displayTime = time.isValid() ? incidenceDisplayDateTime(m_incidence, time) : time;
+        result.append(QVariantMap {
+            {QStringLiteral("absolute"), time.isValid()},
+            {QStringLiteral("time"), displayTime},
+            {QStringLiteral("minutes"), qMax(0, static_cast<int>(-alarm->startOffset().asSeconds() / 60))},
+            {QStringLiteral("type"), static_cast<int>(alarm->type())},
+        });
+    }
+    return result;
 }
 
 KCalendarCore::Recurrence *IncidenceWrapper::recurrence() const
@@ -455,8 +533,9 @@ void IncidenceWrapper::setRecurrenceDataItem(const QString &key, const QVariant 
             if (!jsval.isArray()) {
                 return;
             }
-            auto vlist = jsval.toVariant().value<QVariantList>();
+            const auto vlist = jsval.toVariant().value<QVariantList>();
             QBitArray days(7);
+            for (int i = 0; i < qMin(7, vlist.size()); ++i) days.setBit(i, vlist.at(i).toBool());
             KCalendarCore::RecurrenceRule *rrule = m_incidence->recurrence()->defaultRRule();
             QList<KCalendarCore::RecurrenceRule::WDayPos> positions;
             for (int i = 0; i < 7; ++i) {
@@ -590,11 +669,13 @@ static int nearestQuarterHour(int secsSinceEpoch)
 
 void IncidenceWrapper::setNewEvent()
 {
+    m_collectionId = 0;
     auto event = KCalendarCore::Event::Ptr(new KCalendarCore::Event);
     QDateTime start;
     start.setSecsSinceEpoch(nearestQuarterHour(QDateTime::currentSecsSinceEpoch()));
-    event->setDtStart(start);
-    event->setDtEnd(start.addSecs(60 * 60));
+    event->setCustomProperty("MauiCalendar", "TimeZone", QString::fromUtf8(QTimeZone::systemTimeZoneId()));
+    event->setDtStart(start.toUTC());
+    event->setDtEnd(start.addSecs(60 * 60).toUTC());
 
     KCalendarCore::Alarm::Ptr alarm(new KCalendarCore::Alarm(event.get()));
     alarm->setEnabled(true);
@@ -613,12 +694,15 @@ void IncidenceWrapper::setNewTodo()
 
 void IncidenceWrapper::setNewIncidence(KCalendarCore::Incidence::Ptr incidence)
 {
+    incidence->setCustomProperty("MauiCalendar", "CollectionId", QString::number(m_collectionId));
     setIncidencePtr(incidence);
 }
 
 void IncidenceWrapper::setIncidencePtr(KCalendarCore::Incidence::Ptr incidencePtr)
 {
     m_incidence = incidencePtr;
+    const auto storedCollectionId = m_incidence->customProperty("MauiCalendar", "CollectionId");
+    m_collectionId = storedCollectionId.isEmpty() ? 0 : storedCollectionId.toLongLong();
     m_originalIncidence = KCalendarCore::Incidence::Ptr(incidencePtr->clone());
     Q_EMIT incidencePtrChanged(incidencePtr);
     Q_EMIT originalIncidencePtrChanged();
@@ -671,6 +755,64 @@ void IncidenceWrapper::addAlarms(KCalendarCore::Alarm::List alarms)
     for (int i = 0; i < alarms.size(); i++) {
         m_incidence->addAlarm(alarms[i]);
     }
+    Q_EMIT remindersChanged();
+}
+
+void IncidenceWrapper::setReminderMinutes(int minutes)
+{
+    clearReminders();
+    if (minutes > 0) addReminderMinutes(minutes);
+}
+
+void IncidenceWrapper::addReminderMinutes(int minutes)
+{
+    if (minutes < 0) return;
+    KCalendarCore::Alarm::Ptr alarm(new KCalendarCore::Alarm(m_incidence.get()));
+    alarm->setEnabled(true);
+    alarm->setType(KCalendarCore::Alarm::Display);
+    alarm->setText(m_incidence->summary());
+    alarm->setStartOffset(KCalendarCore::Duration(-minutes * 60));
+    m_incidence->addAlarm(alarm);
+    Q_EMIT remindersChanged();
+}
+
+void IncidenceWrapper::setReminderMinutesAt(int index, int minutes)
+{
+    if (index < 0 || index >= m_incidence->alarms().size() || minutes < 0) return;
+    const auto alarm = m_incidence->alarms().at(index);
+    alarm->setEnabled(true);
+    alarm->setType(KCalendarCore::Alarm::Display);
+    alarm->setTime(QDateTime());
+    alarm->setStartOffset(KCalendarCore::Duration(-minutes * 60));
+    Q_EMIT remindersChanged();
+}
+
+void IncidenceWrapper::setReminderTimeAt(int index, const QDateTime &time)
+{
+    if (index < 0 || index >= m_incidence->alarms().size() || !time.isValid()) return;
+    const auto alarm = m_incidence->alarms().at(index);
+    alarm->setEnabled(true);
+    alarm->setType(KCalendarCore::Alarm::Display);
+    const auto wallTime = incidenceWallDateTime(this, time.date(), time.time());
+    alarm->setTime(incidenceStoredDateTime(m_incidence, wallTime));
+    alarm->setStartOffset(KCalendarCore::Duration(0));
+    Q_EMIT remindersChanged();
+}
+
+void IncidenceWrapper::removeReminderAt(int index)
+{
+    if (index < 0 || index >= m_incidence->alarms().size()) return;
+    m_incidence->removeAlarm(m_incidence->alarms().at(index));
+    Q_EMIT remindersChanged();
+}
+
+void IncidenceWrapper::clearReminders()
+{
+    const auto alarms = m_incidence->alarms();
+    for (const auto &alarm : alarms) {
+        m_incidence->removeAlarm(alarm);
+    }
+    Q_EMIT remindersChanged();
 }
 
 void IncidenceWrapper::setRegularRecurrence(IncidenceWrapper::RecurrenceIntervals interval, int freq)
@@ -705,9 +847,36 @@ void IncidenceWrapper::setMonthlyPosRecurrence(short pos, int day)
     m_incidence->recurrence()->addMonthlyPos(pos, daysBitArray);
 }
 
+void IncidenceWrapper::setMonthlyPositionRecurrence(int position, int weekday)
+{
+    if (weekday < 0 || weekday > 6) return;
+    if (position == 0) position = 1;
+    QList<KCalendarCore::RecurrenceRule::WDayPos> positions;
+    positions.append(KCalendarCore::RecurrenceRule::WDayPos(position, weekday + 1));
+    m_incidence->recurrence()->setMonthlyDate({});
+    m_incidence->recurrence()->setMonthlyPos(positions);
+    Q_EMIT recurrenceDataChanged();
+}
+
 void IncidenceWrapper::setRecurrenceOccurrences(int occurrences)
 {
-    m_incidence->recurrence()->setDuration(occurrences);
+    m_incidence->recurrence()->setEndDateTime({});
+    m_incidence->recurrence()->setDuration(qMax(1, occurrences));
+    Q_EMIT recurrenceDataChanged();
+}
+
+void IncidenceWrapper::setRecurrenceEndDate(const QDate &date)
+{
+    if (!date.isValid()) return;
+    m_incidence->recurrence()->setDuration(0);
+    m_incidence->recurrence()->setEndDate(date);
+    Q_EMIT recurrenceDataChanged();
+}
+
+void IncidenceWrapper::clearRecurrenceEnd()
+{
+    m_incidence->recurrence()->setDuration(-1);
+    m_incidence->recurrence()->setEndDateTime({});
     Q_EMIT recurrenceDataChanged();
 }
 

@@ -8,6 +8,12 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/code
 add_library(MauiKitCalendar${MAUI_MAJOR_VERSION})
 set_source_files_properties(controls.${QT_MAJOR_VERSION}/CalendarUiUtils.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
+ecm_qt_declare_logging_category(MauiKitCalendar${MAUI_MAJOR_VERSION}
+    HEADER calendar_debug.h
+    IDENTIFIER CALENDAR_LOG
+    CATEGORY_NAME org.maui.calendar
+    DEFAULT_SEVERITY Warning)
+
 ecm_add_qml_module(MauiKitCalendar${MAUI_MAJOR_VERSION}
     VERSION 1.0
     URI "org.mauikit.calendar"
@@ -16,7 +22,9 @@ ecm_add_qml_module(MauiKitCalendar${MAUI_MAJOR_VERSION}
 
 ##header files to install
 set(lib_HDRS
-    code/moduleinfo.h)
+    code/moduleinfo.h
+    code/calendarmanager.h
+    code/incidencewrapper.h)
 
 target_sources(MauiKitCalendar${MAUI_MAJOR_VERSION}plugin
     PRIVATE
@@ -55,6 +63,12 @@ target_sources(MauiKitCalendar${MAUI_MAJOR_VERSION}
 
     code/models/timezonelistmodel.cpp
     code/models/timezonelistmodel.h
+
+    code/models/remindersmodel.cpp
+    code/models/remindersmodel.h
+
+    code/models/recurrenceexceptionsmodel.cpp
+    code/models/recurrenceexceptionsmodel.h
 
     code/collection.cpp
     code/collection.h
@@ -99,15 +113,20 @@ target_include_directories(MauiKitCalendar${MAUI_MAJOR_VERSION}
 target_include_directories(MauiKitCalendar${MAUI_MAJOR_VERSION} PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR};${CMAKE_CURRENT_BINARY_DIR};>")
 
 target_link_libraries(MauiKitCalendar${MAUI_MAJOR_VERSION}
+    PUBLIC
+    KF${KF_MAJOR_VERSION}::CalendarCore
     PRIVATE
     MauiKit${MAUI_MAJOR_VERSION}
     Qt${QT_MAJOR_VERSION}::Core
+    Qt${QT_MAJOR_VERSION}::Gui
     Qt${QT_MAJOR_VERSION}::Quick
     Qt${QT_MAJOR_VERSION}::Qml
+    Qt${QT_MAJOR_VERSION}::DBus
+    Qt${QT_MAJOR_VERSION}::Network
     KF${KF_MAJOR_VERSION}::I18n
     KF${KF_MAJOR_VERSION}::CoreAddons
     KF${KF_MAJOR_VERSION}::ConfigCore
-    KF${KF_MAJOR_VERSION}::CalendarCore)
+)
 
 target_link_libraries(MauiKitCalendar${MAUI_MAJOR_VERSION}plugin
     PRIVATE

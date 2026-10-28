@@ -38,7 +38,7 @@ ComboBox
         implicitHeight: 300
         background: null
 
-        onAccepted:
+        onAccepted: function(date)
         {
             control.datePicked(date)
             control.accepted()

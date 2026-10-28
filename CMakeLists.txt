@@ -57,13 +57,17 @@ include(ECMGenerateHeaders)
 include(ECMFindQmlModule)
 include(ECMQmlModule)
 include(ECMSourceVersionControl)
+include(ECMQtDeclareLoggingCategory)
 
 find_package(Qt${QT_MAJOR_VERSION} ${REQUIRED_QT_VERSION} REQUIRED COMPONENTS
     Core
+    Gui
     Quick
     Qml
     QuickControls2
-    Svg)
+    Svg
+    DBus
+    Network)
 
 find_package(KF${KF_MAJOR_VERSION} ${REQUIRED_KF_VERSION} REQUIRED COMPONENTS
     I18n
