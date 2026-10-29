@@ -32,6 +32,7 @@ QQC2.Pane
     property int daysPerRow: 7
     property double weekHeaderWidth: root.showWeekNumbers ? Maui.Style.units.gridUnit * 1.5 : 0
     property date currentDate
+    property date selectedDate
 
     property int currentDay: currentDate ? currentDate.getDate() : null
     property int currentMonth: currentDate ? currentDate.getMonth() : null
@@ -164,63 +165,60 @@ QQC2.Pane
                                         property int month: date.getMonth()
                                         property int year: date.getFullYear()
                                         property bool isToday: day === root.currentDay && month === root.currentMonth && year === root.currentYear
+                                        property bool isSelected: root.selectedDate
+                                                && day === root.selectedDate.getDate()
+                                                && month === root.selectedDate.getMonth()
+                                                && year === root.selectedDate.getFullYear()
                                         property bool isCurrentMonth: month === root.month
 
                                         background: Rectangle
                                         {
                                             visible: gridItem.isCurrentMonth
-                                            color: gridItem.isToday ? Maui.Theme.activeBackgroundColor :
-                                                                      gridItem.hovered ? Maui.Theme.hoverColor : Maui.Theme.alternateBackgroundColor
+                                            color: gridItem.isSelected ? Maui.Theme.highlightColor :
+                                                   gridItem.isToday ? Maui.Theme.activeBackgroundColor :
+                                                   gridItem.hovered ? Maui.Theme.hoverColor : Maui.Theme.alternateBackgroundColor
                                             radius: Maui.Style.radiusV
                                         }
 
-                                        contentItem: ColumnLayout
+                                        contentItem: Item
                                         {
-                                            spacing: Maui.Style.space.medium
-                                            RowLayout
+                                            QQC2.Label
                                             {
-                                                id: dayNumberLayout
-                                                Layout.fillWidth: true
-                                                visible: root.showDayIndicator
-
-
-                                                QQC2.Label
-                                                {
-                                                    Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                                                    text: i18n("Today")
-                                                    renderType: Text.QtRendering
-                                                    color: Maui.Theme.highlightedTextColor
-                                                    visible: gridItem.isToday && root.isWide
-                                                    font.bold: root.isWide
-                                                    font.weight: root.isWide ? Font.Bold : Font.Normal
-                                                    font.pointSize: root.isWide ? Maui.Style.fontSizes.big : Maui.Style.fontSizes.small
-                                                }
-
-                                                QQC2.Label
-                                                {
-                                                    Layout.alignment: gridItem.width > Maui.Style.units.gridUnit * 5 ? Qt.AlignRight | Qt.AlignTop : Qt.AlignCenter
-
-                                                    text: gridItem.date.toLocaleDateString(Qt.locale(), gridItem.day == 1 && root.isWide ? "d MMM" : "d")
-                                                    renderType: Text.QtRendering
-                                                    horizontalAlignment: Qt.AlignHCenter
-
-                                                    color: gridItem.isToday ?
-                                                               Maui.Theme.highlightedTextColor :
-                                                               (!gridItem.isCurrentMonth ? Maui.Theme.disabledTextColor : Maui.Theme.textColor)
-                                                    font.bold: root.isWide
-                                                    font.weight: root.isWide ? Font.Bold : Font.Normal
-                                                    font.pointSize: root.isWide ? Maui.Style.fontSizes.big : Maui.Style.fontSizes.small
-
-                                                }
+                                                id: _todayLabel
+                                                anchors.left: parent.left
+                                                anchors.top: parent.top
+                                                text: i18n("Today")
+                                                renderType: Text.QtRendering
+                                                color: Maui.Theme.highlightedTextColor
+                                                visible: root.showDayIndicator && gridItem.isToday && root.isWide
+                                                font.bold: root.isWide
+                                                font.weight: root.isWide ? Font.Bold : Font.Normal
+                                                font.pointSize: root.isWide ? Maui.Style.fontSizes.big : Maui.Style.fontSizes.small
                                             }
 
+                                            QQC2.Label
+                                            {
+                                                id: _dateLabel
+                                                anchors.centerIn: parent
+                                                visible: root.showDayIndicator
+                                                text: gridItem.date.toLocaleDateString(Qt.locale(), gridItem.day == 1 && root.isWide ? "d MMM" : "d")
+                                                renderType: Text.QtRendering
+                                                horizontalAlignment: Text.AlignHCenter
+                                                verticalAlignment: Text.AlignVCenter
+
+                                                color: gridItem.isSelected || gridItem.isToday ?
+                                                           Maui.Theme.highlightedTextColor :
+                                                           (!gridItem.isCurrentMonth ? Qt.alpha(Maui.Theme.textColor, 0.5) : Maui.Theme.textColor)
+                                                font.bold: root.isWide
+                                                font.weight: root.isWide ? Font.Bold : Font.Normal
+                                                font.pointSize: root.isWide ? Maui.Style.fontSizes.big : Maui.Style.fontSizes.small
+                                            }
 
                                             Flow
                                             {
-                                                width: parent.width
-                                                Layout.alignment: Qt.AlignBottom
-                                                Layout.fillWidth: true
-                                                Layout.fillHeight: true
+                                                anchors.left: parent.left
+                                                anchors.right: parent.right
+                                                anchors.bottom: parent.bottom
                                                 spacing: Maui.Style.space.tiny
                                                 clip: true
 

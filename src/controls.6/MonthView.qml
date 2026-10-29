@@ -156,6 +156,7 @@ Pane
     background: Rectangle
     {
         color: Maui.Theme.backgroundColor
+        radius: Maui.Style.radiusV
     }
     
     MauiCalendar.InfiniteCalendarViewModel
@@ -245,6 +246,7 @@ Pane
                 
                 startDate: viewLoader.startDate
                 currentDate: control.currentDate
+                selectedDate: control.selectedDate
                 month: viewLoader.month
                                                
                 onDateClicked: (date) =>
@@ -277,7 +279,7 @@ Pane
                         }
                         
                         
-                        horizontalAlignment: Text.AlignLeft
+                        horizontalAlignment: Text.AlignHCenter
                         font.bold: true
                         font.weight: Font.Bold
                         font.pointSize: Maui.Style.fontSizes.big                        
