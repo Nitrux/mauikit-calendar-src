@@ -1,6 +1,6 @@
 # MauiKit Calendar
 
-![](https://mauikit.org/wp-content/uploads/2018/12/maui_project_logo.png)
+![maui_logo_current](https://nxos.org/wp-content/uploads/2019/10/maui_project_logo-min.png)
 
 _Calendar data models and UI components for MauiKit applications._
 
