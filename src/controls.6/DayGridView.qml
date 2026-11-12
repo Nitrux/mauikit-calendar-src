@@ -175,7 +175,7 @@ QQC2.Pane
                                         {
                                             visible: gridItem.isCurrentMonth
                                             color: gridItem.isSelected ? Maui.Theme.highlightColor :
-                                                   gridItem.isToday ? Maui.Theme.activeBackgroundColor :
+                                                   gridItem.isToday ? Qt.alpha(Maui.Theme.activeBackgroundColor, 0.22) :
                                                    gridItem.hovered ? Maui.Theme.hoverColor : Maui.Theme.alternateBackgroundColor
                                             radius: Maui.Style.radiusV
                                         }
