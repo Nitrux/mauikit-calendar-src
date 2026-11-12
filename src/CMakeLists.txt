@@ -89,6 +89,9 @@ ecm_target_qml_sources(MauiKitCalendar${MAUI_MAJOR_VERSION} SOURCES
     controls.${QT_MAJOR_VERSION}/DayLabelsBar.qml
     controls.${QT_MAJOR_VERSION}/DaysGrid.qml
     controls.${QT_MAJOR_VERSION}/EventPage.qml
+    controls.${QT_MAJOR_VERSION}/EventTimeline.qml
+    controls.${QT_MAJOR_VERSION}/WeekView.qml
+    controls.${QT_MAJOR_VERSION}/DayView.qml
     controls.${QT_MAJOR_VERSION}/MonthsGrid.qml
     controls.${QT_MAJOR_VERSION}/MonthView.qml
     controls.${QT_MAJOR_VERSION}/TimeComboBox.qml

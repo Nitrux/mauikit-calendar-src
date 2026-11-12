@@ -152,6 +152,8 @@ Pane
      * @brief
      */
     signal dateDoubleClicked(var date)
+    signal incidenceClicked(var incidence, var occurrence)
+    signal moreEventsClicked(var date)
     
     background: Rectangle
     {
@@ -260,6 +262,9 @@ Pane
                     control.selectedDate = date
                     control.dateDoubleClicked(control.selectedDate)
                 }
+
+                onIncidenceClicked: function(incidence, occurrence) { control.incidenceClicked(incidence, occurrence) }
+                onMoreEventsClicked: function(date) { control.moreEventsClicked(date) }
                 
                 dayHeaderDelegate: ItemDelegate
                 {

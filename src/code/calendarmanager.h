@@ -7,6 +7,7 @@
 #include <QtQmlIntegration/qqmlintegration.h>
 
 #include <QAbstractItemModel>
+#include <QByteArray>
 #include <QColor>
 #include <QDateTime>
 #include <QJSEngine>
@@ -29,6 +30,7 @@
 #include "incidencewrapper.h"
 
 class QTimer;
+class QFileSystemWatcher;
 class QTcpServer;
 class QTcpSocket;
 
@@ -89,7 +91,11 @@ public:
     Q_INVOKABLE bool saveCalDavPermissions(const QVariantList &permissions);
     Q_INVOKABLE void resolveSyncConflict(const QString &uid, bool keepLocal);
     Q_SCRIPTABLE Q_INVOKABLE QStringList upcomingEvents(int days = 7) const;
-    Q_SCRIPTABLE Q_INVOKABLE QStringList eventsForDate(const QString &date) const;
+public Q_SLOTS:
+    Q_SCRIPTABLE QStringList eventsForDate(const QString &date) const;
+    Q_INVOKABLE QVariantList todos() const;
+
+public:
     Q_INVOKABLE void addIncidence(IncidenceWrapper *incidenceWrapper);
     Q_INVOKABLE void editIncidence(IncidenceWrapper *incidenceWrapper, const QDateTime &occurrenceStart = {});
     Q_INVOKABLE void deleteIncidence(KCalendarCore::Incidence::Ptr incidence, bool deleteChildren = false);
@@ -100,7 +106,7 @@ public:
 
 Q_SIGNALS:
     void loadingChanged();
-    void calendarChanged();
+    Q_SCRIPTABLE void calendarChanged();
     void subscriptionsChanged();
     void caldavPermissionsChanged();
     void caldavPermissionsError(const QString &message);
@@ -112,6 +118,7 @@ Q_SIGNALS:
 private Q_SLOTS:
     void handleNotificationAction(uint notificationId, const QString &action);
     void handleOAuthConnection();
+    void reloadCalendarIfChanged();
 
 private:
     void mergeCalendar(const KCalendarCore::MemoryCalendar::Ptr &source, bool preferRemote, qint64 collectionId = -1);
@@ -141,6 +148,9 @@ private:
     KCalendarCore::Incidence::List calendarIncidences(const QByteArray &data) const;
 
     KCalendarCore::MemoryCalendar::Ptr m_calendar;
+    QString m_calendarFilePath;
+    QByteArray m_calendarFileHash;
+    QFileSystemWatcher *m_calendarWatcher = nullptr;
     KCalendarCore::FileStorage *m_storage = nullptr;
     QStandardItemModel *m_collections = nullptr;
     QTimer *m_reminderTimer = nullptr;

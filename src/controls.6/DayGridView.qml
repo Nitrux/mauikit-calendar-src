@@ -28,6 +28,22 @@ QQC2.Pane
     property var openOccurrence
     property var model
 
+    MauiCalendar.IncidenceOccurrenceModel
+    {
+        id: monthOccurrences
+        start: root.startDate
+        length: root.daysToShow
+        filter: MauiCalendar.Filter
+    }
+
+    MauiCalendar.MultiDayIncidenceModel
+    {
+        id: multiDayLayout
+        model: monthOccurrences
+        periodLength: root.daysPerRow
+        filters: MauiCalendar.MultiDayIncidenceModel.AllDayOnly | MauiCalendar.MultiDayIncidenceModel.MultiDayOnly
+    }
+
     property int daysToShow: daysPerRow * 6
     property int daysPerRow: 7
     property double weekHeaderWidth: root.showWeekNumbers ? Maui.Style.units.gridUnit * 1.5 : 0
@@ -75,6 +91,8 @@ QQC2.Pane
     
     signal dateClicked(var date)
     signal dateDoubleClicked(var date)
+    signal incidenceClicked(var incidence, var occurrence)
+    signal moreEventsClicked(var date)
     
     contentItem: Loader
     {
@@ -101,11 +119,14 @@ QQC2.Pane
 
             Repeater
             {
-                model: root.numberOfRows
+                model: multiDayLayout
 
                 //One row => one week
                 Item
                 {
+                    id: weekRow
+                    required property int index
+                    required property var incidences
                     width: parent.width
                     height: root.dayHeight
                     clip: true
@@ -120,7 +141,7 @@ QQC2.Pane
                         {
                             id: weekHeader
                             sourceComponent: root.weekHeaderDelegate
-                            property date startDate: DateUtils.addDaysToDate(root.startDate, index * 7)
+                            property date startDate: DateUtils.addDaysToDate(root.startDate, weekRow.index * 7)
                             Layout.preferredWidth: weekHeaderWidth
                             Layout.fillHeight: true
                             active: root.showWeekNumbers
@@ -132,7 +153,7 @@ QQC2.Pane
                             id: dayDelegate
                             Layout.fillWidth: true
                             Layout.fillHeight: true
-                            property date startDate: DateUtils.addDaysToDate(root.startDate, index * 7)
+                            property date startDate: DateUtils.addDaysToDate(root.startDate, weekRow.index * 7)
 
                             //Grid
                             Row
@@ -148,11 +169,13 @@ QQC2.Pane
                                     QQC2.Button
                                     {
                                         id: gridItem
+                                        required property int index
                                         Maui.Theme.colorSet: Maui.Theme.View
                                         Maui.Theme.inherit: false
 
                                         height: root.dayHeight
                                         width: root.dayWidth
+                                        clip: true
                                         enabled: root.daysToShow > 1
                                         visible: root.showDayIndicator
                                         padding: Maui.Style.space.small
@@ -160,7 +183,7 @@ QQC2.Pane
                                         onDoubleClicked: root.dateDoubleClicked(gridItem.date)
 
                                         property date gridSquareDate: date
-                                        property date date: DateUtils.addDaysToDate(dayDelegate.startDate, modelData)
+                                        property date date: DateUtils.addDaysToDate(dayDelegate.startDate, gridItem.index)
                                         property int day: date.getDate()
                                         property int month: date.getMonth()
                                         property int year: date.getFullYear()
@@ -182,6 +205,10 @@ QQC2.Pane
 
                                         contentItem: Item
                                         {
+                                            id: eventCell
+                                            clip: true
+                                            property int singleDayEventCount: 0
+
                                             QQC2.Label
                                             {
                                                 id: _todayLabel
@@ -199,7 +226,10 @@ QQC2.Pane
                                             QQC2.Label
                                             {
                                                 id: _dateLabel
-                                                anchors.centerIn: parent
+                                                anchors.horizontalCenter: parent.horizontalCenter
+                                                anchors.verticalCenter: root.isWide ? undefined : parent.verticalCenter
+                                                anchors.top: root.isWide ? parent.top : undefined
+                                                anchors.topMargin: root.isWide ? Maui.Style.space.tiny : 0
                                                 visible: root.showDayIndicator
                                                 text: gridItem.date.toLocaleDateString(Qt.locale(), gridItem.day == 1 && root.isWide ? "d MMM" : "d")
                                                 renderType: Text.QtRendering
@@ -218,7 +248,9 @@ QQC2.Pane
                                             {
                                                 anchors.left: parent.left
                                                 anchors.right: parent.right
+                                                anchors.top: _dateLabel.bottom
                                                 anchors.bottom: parent.bottom
+                                                anchors.topMargin: Maui.Style.space.small
                                                 spacing: Maui.Style.space.tiny
                                                 clip: true
 
@@ -231,32 +263,111 @@ QQC2.Pane
                                                         filter: MauiCalendar.Filter
                                                     }
 
-
-
-
-                                                    delegate: Rectangle
+                                                    delegate: QQC2.Button
                                                     {
-                                                        radius: height
-                                                        height: 10
-                                                        width: height
-                                                        color: randomColor(150)
+                                                        required property string summary
+                                                        required property bool allDay
+                                                        required property var color
+                                                        required property var incidencePtr
+                                                        required property var startTime
+                                                        required property var endTime
+                                                        property int singleDayEventIndex: -1
+                                                        readonly property bool singleDayEvent: gridItem.isCurrentMonth && !allDay && startTime.toDateString() === gridItem.date.toDateString() && endTime.toDateString() === gridItem.date.toDateString()
 
-                                                        function randomColor(brightness){
-                                                            function randomChannel(brightness){
-                                                                var r = 255-brightness;
-                                                                var n = 0|((Math.random() * r) + brightness);
-                                                                var s = n.toString(16);
-                                                                return (s.length==1) ? '0'+s : s;
+                                                        Component.onCompleted:
+                                                        {
+                                                            if (singleDayEvent)
+                                                            {
+                                                                singleDayEventIndex = eventCell.singleDayEventCount
+                                                                eventCell.singleDayEventCount++
                                                             }
-                                                            return '#' + randomChannel(brightness) + randomChannel(brightness) + randomChannel(brightness);
+                                                        }
+                                                        Component.onDestruction: if (singleDayEvent) eventCell.singleDayEventCount--
+
+                                                        implicitWidth: Math.min(eventLabel.implicitWidth + Maui.Style.space.medium, parent.width)
+                                                        implicitHeight: Maui.Style.rowHeight
+                                                        padding: Maui.Style.space.tiny
+                                                        text: summary
+                                                        visible: singleDayEvent && singleDayEventIndex < 2
+                                                        onClicked: root.incidenceClicked(incidencePtr, startTime)
+
+                                                        contentItem: QQC2.Label
+                                                        {
+                                                            id: eventLabel
+                                                            text: (allDay ? "" : Qt.formatTime(startTime, "HH:mm") + " ") + summary
+                                                            color: Maui.Theme.textColor
+                                                            elide: Text.ElideRight
                                                         }
 
+                                                        background: Rectangle
+                                                        {
+                                                            radius: Maui.Style.radiusV
+                                                            color: "transparent"
+                                                            border.color: parent.color
+                                                            border.width: Maui.Style.units.smallSpacing / 2
+                                                        }
                                                     }
+                                                }
+
+                                                QQC2.Button
+                                                {
+                                                    visible: eventCell.singleDayEventCount > 2
+                                                    implicitHeight: Maui.Style.rowHeight
+                                                    padding: Maui.Style.space.tiny
+                                                    text: i18n("+%1 more", eventCell.singleDayEventCount - 2)
+                                                    onClicked: root.moreEventsClicked(gridItem.date)
                                                 }
                                             }
 
                                         }
 
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Repeater
+                    {
+                        model: weekRow.incidences
+
+                        delegate: Item
+                        {
+                            required property var modelData
+                            required property int index
+                            anchors.fill: weekRow
+
+                            Repeater
+                            {
+                                model: parent.modelData
+
+                                delegate: QQC2.Button
+                                {
+                                    id: spanningEvent
+                                    required property var modelData
+                                    x: root.weekHeaderWidth + root.spacing + Number(modelData.starts) * (root.dayWidth + root.spacing)
+                                    y: Maui.Style.rowHeight + parent.index * Maui.Style.rowHeight
+                                    width: Number(modelData.duration) * (root.dayWidth + root.spacing) - root.spacing
+                                    height: Maui.Style.rowHeight
+                                    padding: Maui.Style.space.tiny
+                                    text: modelData.text
+                                    visible: modelData.incidencePtr !== undefined
+                                    onClicked: root.incidenceClicked(modelData.incidencePtr, modelData.startTime)
+
+                                    background: Rectangle
+                                    {
+                                        radius: Maui.Style.radiusV
+                                        color: "transparent"
+                                        border.color: modelData.color
+                                        border.width: Maui.Style.units.smallSpacing / 2
+                                    }
+
+                                    contentItem: QQC2.Label
+                                    {
+                                        text: spanningEvent.modelData.text
+                                        color: Maui.Theme.textColor
+                                        elide: Text.ElideRight
+                                        verticalAlignment: Text.AlignVCenter
                                     }
                                 }
                             }

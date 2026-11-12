@@ -9,9 +9,12 @@
 
 #include "../calendarmanager.h"
 #include "../filter.h"
+#include <KCalendarCore/Event>
 #include <KCalendarCore/OccurrenceIterator>
 #include <KLocalizedString>
 #include <QMetaEnum>
+#include <QSet>
+#include <QTimeZone>
 
 IncidenceOccurrenceModel::IncidenceOccurrenceModel(QObject *parent)
     : QAbstractListModel(parent)
@@ -125,6 +128,7 @@ void IncidenceOccurrenceModel::resetFromSource()
     m_incidences.clear();
 
     KCalendarCore::OccurrenceIterator occurrenceIterator(*calendar, QDateTime(mStart, {0, 0, 0}), QDateTime(mEnd, {12, 59, 59}));
+    QSet<QString> occurrenceKeys;
 
     while (occurrenceIterator.hasNext()) {
         occurrenceIterator.next();
@@ -135,6 +139,9 @@ void IncidenceOccurrenceModel::resetFromSource()
         }
 
         const auto occurrenceStartEnd = incidenceOccurrenceStartEnd(occurrenceIterator.occurrenceStartDate(), incidence);
+        const auto occurrenceKey = incidence->customProperty("MauiCalendar", "CollectionId") + QLatin1Char(39) + incidence->uid() + QLatin1Char(39) + (incidence->allDay() ? occurrenceStartEnd.first.date().toString(Qt::ISODate) : QString::number(occurrenceStartEnd.first.toMSecsSinceEpoch()));
+        if (occurrenceKeys.contains(occurrenceKey)) continue;
+        occurrenceKeys.insert(occurrenceKey);
         const Occurrence occurrence{
             occurrenceStartEnd.first,
             occurrenceStartEnd.second,
@@ -144,6 +151,34 @@ void IncidenceOccurrenceModel::resetFromSource()
             incidence->allDay(),
         };
         m_incidences.append(occurrence);
+    }
+
+    for (const auto &incidence : calendar->incidences()) {
+        const auto event = incidence.dynamicCast<KCalendarCore::Event>();
+        if (!event || event->recurs() || event->hasRecurrenceId() || !incidencePassesFilter(incidence)) {
+            continue;
+        }
+        const auto [start, end] = incidenceOccurrenceStartEnd(event->dtStart(), incidence);
+        const auto rangeStart = QDateTime(mStart, QTime(0, 0), QTimeZone::systemTimeZone());
+        const auto rangeEnd = QDateTime(mEnd, QTime(0, 0), QTimeZone::systemTimeZone());
+        if (!start.isValid() || !end.isValid() || start.toTimeZone(QTimeZone::systemTimeZone()) >= rangeEnd
+            || end.toTimeZone(QTimeZone::systemTimeZone()) <= rangeStart) {
+            continue;
+        }
+        const auto occurrenceKey = event->customProperty("MauiCalendar", "CollectionId") + QLatin1Char(39) + event->uid() + QLatin1Char(39)
+            + (event->allDay() ? start.date().toString(Qt::ISODate) : QString::number(start.toMSecsSinceEpoch()));
+        if (occurrenceKeys.contains(occurrenceKey)) {
+            continue;
+        }
+        occurrenceKeys.insert(occurrenceKey);
+        m_incidences.append(Occurrence{
+            start,
+            end,
+            incidence,
+            CalendarManager::instance()->collectionColor(incidence->customProperty("MauiCalendar", "CollectionId").toLongLong()),
+            incidence->customProperty("MauiCalendar", "CollectionId").toLongLong(),
+            event->allDay(),
+        });
     }
 
     endResetModel();

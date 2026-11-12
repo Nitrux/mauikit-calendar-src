@@ -56,6 +56,8 @@ class CALENDAR_EXPORT IncidenceWrapper : public QObject
     Q_PROPERTY(KCalendarCore::Duration duration READ duration NOTIFY durationChanged)
     Q_PROPERTY(QString durationDisplayString READ durationDisplayString NOTIFY durationDisplayStringChanged)
     Q_PROPERTY(bool allDay READ allDay WRITE setAllDay NOTIFY allDayChanged)
+    Q_PROPERTY(int eventStatus READ eventStatus WRITE setEventStatus NOTIFY eventStatusChanged)
+    Q_PROPERTY(QVariantList attendees READ attendees NOTIFY attendeesChanged)
     Q_PROPERTY(int priority READ priority WRITE setPriority NOTIFY priorityChanged)
     Q_PROPERTY(bool hasReminders READ hasReminders NOTIFY remindersChanged)
     Q_PROPERTY(int reminderMinutes READ reminderMinutes NOTIFY remindersChanged)
@@ -148,6 +150,12 @@ public:
     QString durationDisplayString() const;
     bool allDay() const;
     void setAllDay(bool allDay);
+    int eventStatus() const;
+    void setEventStatus(int status);
+    QVariantList attendees() const;
+    Q_INVOKABLE void addAttendee(const QString &name, const QString &email);
+    Q_INVOKABLE void setAttendeeRole(int index, const QString &role);
+    Q_INVOKABLE void removeAttendee(int index);
     int priority() const;
     void setPriority(int priority);
     bool hasReminders() const;
@@ -213,6 +221,8 @@ Q_SIGNALS:
     void durationChanged();
     void durationDisplayStringChanged();
     void allDayChanged();
+    void eventStatusChanged();
+    void attendeesChanged();
     void priorityChanged();
     void remindersChanged();
 

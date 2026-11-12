@@ -46,7 +46,7 @@ public:
     enum Filter {
         AllDayOnly = 0x1,
         NoStartDateOnly = 0x2,
-        MultiDayOnly = 0x3,
+        MultiDayOnly = 0x4,
     };
     Q_DECLARE_FLAGS(Filters, Filter)
     Q_FLAGS(Filters)

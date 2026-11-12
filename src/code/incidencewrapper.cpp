@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2021 Claudio Cambra <claudio.cambra@gmail.com>
 // SPDX-License-Identifier: LGPL-2.1-or-later
 
+#include <KCalendarCore/Attendee>
 #include <KLocalizedString>
 #include <QBitArray>
 #include <QJSValue>
@@ -89,6 +90,8 @@ void IncidenceWrapper::notifyDataChanged()
     Q_EMIT durationChanged();
     Q_EMIT durationDisplayStringChanged();
     Q_EMIT allDayChanged();
+    Q_EMIT eventStatusChanged();
+    Q_EMIT attendeesChanged();
     Q_EMIT priorityChanged();
     Q_EMIT remindersChanged();
     Q_EMIT organizerChanged();
@@ -443,6 +446,72 @@ void IncidenceWrapper::setAllDay(bool allDay)
     Q_EMIT allDayChanged();
 }
 
+int IncidenceWrapper::eventStatus() const
+{
+    return static_cast<int>(m_incidence->status());
+}
+
+void IncidenceWrapper::setEventStatus(int status)
+{
+    const auto incidenceStatus = static_cast<KCalendarCore::Incidence::Status>(status);
+    if (m_incidence->status() == incidenceStatus) return;
+    m_incidence->setStatus(incidenceStatus);
+    Q_EMIT eventStatusChanged();
+}
+
+QVariantList IncidenceWrapper::attendees() const
+{
+    QVariantList result;
+    const auto incidenceAttendees = m_incidence->attendees();
+    result.reserve(incidenceAttendees.size());
+    for (const auto &attendee : incidenceAttendees) {
+        result.append(QVariantMap {
+            {QStringLiteral("name"), attendee.name()},
+            {QStringLiteral("fullName"), attendee.fullName()},
+            {QStringLiteral("email"), attendee.email()},
+            {QStringLiteral("role"), attendee.role() == KCalendarCore::Attendee::Role::ReqParticipant ? QStringLiteral("required") : attendee.role() == KCalendarCore::Attendee::Role::OptParticipant ? QStringLiteral("optional") : attendee.role() == KCalendarCore::Attendee::Role::NonParticipant ? QStringLiteral("nonparticipant") : QStringLiteral("chair")},
+            {QStringLiteral("status"), attendee.status() == KCalendarCore::Attendee::PartStat::Accepted ? QStringLiteral("Accepted") : attendee.status() == KCalendarCore::Attendee::PartStat::Tentative ? QStringLiteral("Tentative") : attendee.status() == KCalendarCore::Attendee::PartStat::Declined ? QStringLiteral("Declined") : QStringLiteral("Needs action")}
+        });
+    }
+    return result;
+}
+
+void IncidenceWrapper::addAttendee(const QString &name, const QString &email)
+{
+    const auto normalizedEmail = email.trimmed();
+    if (normalizedEmail.isEmpty()) return;
+    const auto normalizedName = name.trimmed().isEmpty() ? normalizedEmail : name.trimmed();
+    for (const auto &attendee : m_incidence->attendees()) {
+        if (attendee.email().compare(normalizedEmail, Qt::CaseInsensitive) == 0) return;
+    }
+    m_incidence->addAttendee(KCalendarCore::Attendee(normalizedName, normalizedEmail, true));
+    Q_EMIT attendeesChanged();
+}
+
+void IncidenceWrapper::setAttendeeRole(int index, const QString &role)
+{
+    auto incidenceAttendees = m_incidence->attendees();
+    if (index < 0 || index >= incidenceAttendees.size()) return;
+    KCalendarCore::Attendee::Role attendeeRole = KCalendarCore::Attendee::Role::ReqParticipant;
+    if (role == QStringLiteral("optional")) attendeeRole = KCalendarCore::Attendee::Role::OptParticipant;
+    else if (role == QStringLiteral("nonparticipant")) attendeeRole = KCalendarCore::Attendee::Role::NonParticipant;
+    else if (role == QStringLiteral("chair")) attendeeRole = KCalendarCore::Attendee::Role::Chair;
+    incidenceAttendees[index].setRole(attendeeRole);
+    m_incidence->clearAttendees();
+    for (const auto &attendee : incidenceAttendees) m_incidence->addAttendee(attendee);
+    Q_EMIT attendeesChanged();
+}
+
+void IncidenceWrapper::removeAttendee(int index)
+{
+    auto incidenceAttendees = m_incidence->attendees();
+    if (index < 0 || index >= incidenceAttendees.size()) return;
+    incidenceAttendees.removeAt(index);
+    m_incidence->clearAttendees();
+    for (const auto &attendee : incidenceAttendees) m_incidence->addAttendee(attendee);
+    Q_EMIT attendeesChanged();
+}
+
 int IncidenceWrapper::priority() const
 {
     return m_incidence->priority();
@@ -671,6 +740,7 @@ void IncidenceWrapper::setNewEvent()
 {
     m_collectionId = 0;
     auto event = KCalendarCore::Event::Ptr(new KCalendarCore::Event);
+    event->setAllDay(false);
     QDateTime start;
     start.setSecsSinceEpoch(nearestQuarterHour(QDateTime::currentSecsSinceEpoch()));
     event->setCustomProperty("MauiCalendar", "TimeZone", QString::fromUtf8(QTimeZone::systemTimeZoneId()));
