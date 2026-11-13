@@ -76,6 +76,7 @@ Page
      * @param date
      */
     signal dateRightClicked(var date)
+    signal dateContextRequested(var date, var anchor, real x, real y)
     
     title : _monthModel.monthName(control.month)
     
@@ -132,6 +133,12 @@ Page
                 font.pointSize: control.compact ? Maui.Style.fontSizes.tiny : Maui.Style.fontSizes.medium
                 
                 onClicked: control.dateClicked(model.date)
+
+                TapHandler
+                {
+                    acceptedButtons: Qt.RightButton
+                    onTapped: function(eventPoint) { control.dateRightClicked(model.date); control.dateContextRequested(model.date, parent, eventPoint.position.x, eventPoint.position.y) }
+                }
                 
                 background: Rectangle
                 {

@@ -85,6 +85,8 @@ public:
     Q_INVOKABLE bool addCollection(const QString &name);
     Q_INVOKABLE bool removeCollection(qint64 collectionId);
     Q_INVOKABLE void syncCalDav(const QString &url, const QString &username = {}, const QString &password = {}, qint64 collectionId = -1);
+    Q_INVOKABLE void syncAllCalDavAccounts();
+    Q_INVOKABLE QVariantList searchIncidences(const QString &query) const;
     Q_INVOKABLE bool startCalDavOAuthAuthorization(const QString &calendarUrl, const QString &authorizationUrl, const QString &tokenUrl, const QString &clientId, const QString &clientSecret = {});
     Q_INVOKABLE bool isCalDavCollection(qint64 collectionId) const;
     Q_INVOKABLE void loadCalDavPermissions(qint64 collectionId);

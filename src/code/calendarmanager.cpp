@@ -809,6 +809,41 @@ QStringList CalendarManager::eventsForDate(const QString &date) const
     return events;
 }
 
+QVariantList CalendarManager::searchIncidences(const QString &query) const
+{
+    const auto needle = query.trimmed();
+    if (needle.isEmpty()) return {};
+
+    QVariantList results;
+    for (const auto &incidence : m_calendar->incidences()) {
+        if (!incidence->summary().contains(needle, Qt::CaseInsensitive)
+            && !incidence->description().contains(needle, Qt::CaseInsensitive)
+            && !incidence->location().contains(needle, Qt::CaseInsensitive)) {
+            continue;
+        }
+
+        QDateTime start;
+        bool isTask = false;
+        if (const auto event = incidence.dynamicCast<KCalendarCore::Event>()) {
+            start = event->dtStart();
+        } else if (const auto todo = incidence.dynamicCast<KCalendarCore::Todo>()) {
+            isTask = true;
+            start = todo->dtStart();
+        } else {
+            continue;
+        }
+
+        results.append(QVariantMap {
+            {QStringLiteral("summary"), incidence->summary()},
+            {QStringLiteral("startTime"), start},
+            {QStringLiteral("hasDate"), start.isValid()},
+            {QStringLiteral("isTask"), isTask},
+            {QStringLiteral("incidencePtr"), QVariant::fromValue(incidence)}
+        });
+    }
+    return results;
+}
+
 QVariantList CalendarManager::todos() const
 {
     KCalendarCore::Todo::List todoList;
@@ -1121,6 +1156,11 @@ void CalendarManager::saveCalDavAccounts()
     QSettings settings;
     settings.setValue(QStringLiteral("Agenda/caldavUrls"), m_caldavUrls);
     settings.remove(QStringLiteral("Agenda/caldavAccounts"));
+}
+
+void CalendarManager::syncAllCalDavAccounts()
+{
+    syncSavedCalDavAccounts();
 }
 
 void CalendarManager::syncSavedCalDavAccounts()

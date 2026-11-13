@@ -94,6 +94,8 @@ QQC2.Pane
     signal dateClicked(var date)
     signal dateDoubleClicked(var date)
     signal incidenceClicked(var incidence, var occurrence)
+    signal incidenceRightClicked(var incidence, var occurrence, bool recurring, int collectionId, var anchor, real x, real y)
+    signal dateContextRequested(var date, var anchor, real x, real y)
     signal moreEventsClicked(var date)
     
     contentItem: Loader
@@ -185,6 +187,12 @@ QQC2.Pane
                                         onClicked: root.dateClicked(gridItem.date)
                                         onDoubleClicked: root.dateDoubleClicked(gridItem.date)
 
+                                        TapHandler
+                                        {
+                                            acceptedButtons: Qt.RightButton
+                                            onTapped: function(eventPoint) { root.dateContextRequested(gridItem.date, gridItem, eventPoint.position.x, eventPoint.position.y) }
+                                        }
+
                                         property date gridSquareDate: date
                                         property date date: DateUtils.addDaysToDate(dayDelegate.startDate, gridItem.index)
                                         property int day: date.getDate()
@@ -275,6 +283,8 @@ QQC2.Pane
                                                         required property var incidencePtr
                                                         required property var startTime
                                                         required property var endTime
+                                                        required property bool recurs
+                                                        required property int collectionId
                                                         property int singleDayEventIndex: -1
                                                         readonly property bool singleDayEvent: gridItem.isCurrentMonth && !allDay && startTime.toDateString() === gridItem.date.toDateString() && endTime.toDateString() === gridItem.date.toDateString()
 
@@ -294,6 +304,12 @@ QQC2.Pane
                                                         text: summary
                                                         visible: singleDayEvent && singleDayEventIndex < 2
                                                         onClicked: root.incidenceClicked(incidencePtr, startTime)
+
+                                                        TapHandler
+                                                        {
+                                                            acceptedButtons: Qt.RightButton
+                                                            onTapped: function(eventPoint) { root.incidenceRightClicked(incidencePtr, startTime, recurs, collectionId, parent, eventPoint.position.x, eventPoint.position.y) }
+                                                        }
 
                                                         contentItem: QQC2.Label
                                                         {
@@ -320,6 +336,12 @@ QQC2.Pane
                                                     padding: Maui.Style.space.tiny
                                                     text: i18n("+%1 more", eventCell.singleDayEventCount - 2)
                                                     onClicked: root.moreEventsClicked(gridItem.date)
+
+                                                    TapHandler
+                                                    {
+                                                        acceptedButtons: Qt.RightButton
+                                                        onTapped: function(eventPoint) { root.dateContextRequested(gridItem.date, parent, eventPoint.position.x, eventPoint.position.y) }
+                                                    }
                                                 }
                                             }
 
@@ -357,6 +379,12 @@ QQC2.Pane
                                     text: modelData.text
                                     visible: modelData.incidencePtr !== undefined
                                     onClicked: root.incidenceClicked(modelData.incidencePtr, modelData.startTime)
+
+                                    TapHandler
+                                    {
+                                        acceptedButtons: Qt.RightButton
+                                        onTapped: function(eventPoint) { root.incidenceRightClicked(modelData.incidencePtr, modelData.startTime, modelData.recurs, modelData.collectionId, parent, eventPoint.position.x, eventPoint.position.y) }
+                                    }
 
                                     background: Rectangle
                                     {
