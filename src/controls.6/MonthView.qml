@@ -132,6 +132,8 @@ Pane
      * @brief
      */
     property bool dragDropEnabled: true
+    property bool showDayHeaders: true
+    property bool dayCards: false
     
     /**
      * @brief
@@ -245,6 +247,8 @@ Pane
                 //                model: monthViewModel // from control model
                 isCurrentView: viewLoader.isCurrentItem
                 dragDropEnabled: control.dragDropEnabled
+                showDayHeaders: control.showDayHeaders
+                dayCards: control.dayCards
                 
                 startDate: viewLoader.startDate
                 currentDate: control.currentDate

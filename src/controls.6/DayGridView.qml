@@ -58,6 +58,8 @@ QQC2.Pane
     
     property bool paintGrid: true
     property bool showDayIndicator: true
+    property bool showDayHeaders: true
+    property bool dayCards: false
 
     property Component dayHeaderDelegate
     property Component weekHeaderDelegate
@@ -112,6 +114,7 @@ QQC2.Pane
                 dayWidth: root.dayWidth
                 daysToShow: root.daysPerRow
                 spacing: root.spacing
+                visible: root.showDayHeaders
                 anchors.leftMargin: root.showWeekNumbers ? weekHeaderWidth + root.spacing : 0
                 anchors.left: parent.left
                 anchors.right: parent.right
@@ -176,7 +179,7 @@ QQC2.Pane
                                         height: root.dayHeight
                                         width: root.dayWidth
                                         clip: true
-                                        enabled: root.daysToShow > 1
+                                        enabled: root.dayCards ? gridItem.isCurrentMonth : root.daysToShow > 1
                                         visible: root.showDayIndicator
                                         padding: Maui.Style.space.small
                                         onClicked: root.dateClicked(gridItem.date)
@@ -196,8 +199,23 @@ QQC2.Pane
 
                                         background: Rectangle
                                         {
-                                            color: gridItem.isToday || gridItem.isSelected ? Maui.Theme.highlightColor :
-                                                   gridItem.hovered ? Maui.Theme.hoverColor : "transparent"
+                                            color: {
+                                                if (root.dayCards) {
+                                                    if (!gridItem.isCurrentMonth)
+                                                        return "transparent"
+                                                    if (gridItem.isSelected && !gridItem.isToday)
+                                                        return Maui.Theme.highlightColor
+                                                    if (gridItem.hovered && !gridItem.isToday)
+                                                        return Maui.Theme.hoverColor
+                                                    return Maui.Theme.alternateBackgroundColor
+                                                }
+                                                return gridItem.isToday || gridItem.isSelected ? Maui.Theme.highlightColor :
+                                                       gridItem.hovered ? Maui.Theme.hoverColor : "transparent"
+                                            }
+                                            border.color: root.dayCards && gridItem.isCurrentMonth
+                                                          ? (gridItem.isToday ? Maui.Theme.highlightColor : Maui.Theme.backgroundColor)
+                                                          : "transparent"
+                                            border.width: root.dayCards && gridItem.isCurrentMonth ? 1 : 0
                                             radius: Maui.Style.radiusV
                                         }
 
@@ -220,8 +238,11 @@ QQC2.Pane
                                                 horizontalAlignment: Text.AlignHCenter
                                                 verticalAlignment: Text.AlignVCenter
 
-                                                color: gridItem.isToday || gridItem.isSelected ? Maui.Theme.highlightedTextColor :
-                                                       (!gridItem.isCurrentMonth ? Qt.alpha(Maui.Theme.textColor, 0.5) : Maui.Theme.textColor)
+                                                color: root.dayCards
+                                                       ? (gridItem.isSelected && !gridItem.isToday ? Maui.Theme.highlightedTextColor :
+                                                          (!gridItem.isCurrentMonth ? Qt.alpha(Maui.Theme.textColor, 0.5) : Maui.Theme.textColor))
+                                                       : (gridItem.isToday || gridItem.isSelected ? Maui.Theme.highlightedTextColor :
+                                                          (!gridItem.isCurrentMonth ? Qt.alpha(Maui.Theme.textColor, 0.5) : Maui.Theme.textColor))
                                                 font.bold: root.isWide
                                                 font.weight: root.isWide ? Font.Bold : Font.Normal
                                                 font.pointSize: root.isWide ? Maui.Style.fontSizes.big : Maui.Style.fontSizes.small
