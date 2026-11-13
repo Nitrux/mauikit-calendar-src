@@ -196,10 +196,8 @@ QQC2.Pane
 
                                         background: Rectangle
                                         {
-                                            visible: gridItem.isCurrentMonth
-                                            color: gridItem.isSelected ? Maui.Theme.highlightColor :
-                                                   gridItem.isToday ? Qt.alpha(Maui.Theme.activeBackgroundColor, 0.22) :
-                                                   gridItem.hovered ? Maui.Theme.hoverColor : Maui.Theme.alternateBackgroundColor
+                                            color: gridItem.isToday || gridItem.isSelected ? Maui.Theme.highlightColor :
+                                                   gridItem.hovered ? Maui.Theme.hoverColor : "transparent"
                                             radius: Maui.Style.radiusV
                                         }
 
@@ -208,20 +206,6 @@ QQC2.Pane
                                             id: eventCell
                                             clip: true
                                             property int singleDayEventCount: 0
-
-                                            QQC2.Label
-                                            {
-                                                id: _todayLabel
-                                                anchors.left: parent.left
-                                                anchors.top: parent.top
-                                                text: i18n("Today")
-                                                renderType: Text.QtRendering
-                                                color: Maui.Theme.highlightedTextColor
-                                                visible: root.showDayIndicator && gridItem.isToday && root.isWide
-                                                font.bold: root.isWide
-                                                font.weight: root.isWide ? Font.Bold : Font.Normal
-                                                font.pointSize: root.isWide ? Maui.Style.fontSizes.big : Maui.Style.fontSizes.small
-                                            }
 
                                             QQC2.Label
                                             {
@@ -236,9 +220,8 @@ QQC2.Pane
                                                 horizontalAlignment: Text.AlignHCenter
                                                 verticalAlignment: Text.AlignVCenter
 
-                                                color: gridItem.isSelected || gridItem.isToday ?
-                                                           Maui.Theme.highlightedTextColor :
-                                                           (!gridItem.isCurrentMonth ? Qt.alpha(Maui.Theme.textColor, 0.5) : Maui.Theme.textColor)
+                                                color: gridItem.isToday || gridItem.isSelected ? Maui.Theme.highlightedTextColor :
+                                                       (!gridItem.isCurrentMonth ? Qt.alpha(Maui.Theme.textColor, 0.5) : Maui.Theme.textColor)
                                                 font.bold: root.isWide
                                                 font.weight: root.isWide ? Font.Bold : Font.Normal
                                                 font.pointSize: root.isWide ? Maui.Style.fontSizes.big : Maui.Style.fontSizes.small

@@ -12,6 +12,15 @@ Item
     property date startDate: new Date()
     property int dayCount: 1
     property var filter: MauiCalendar.Filter
+    property date currentTime: new Date()
+
+    Timer
+    {
+        interval: 1000
+        repeat: true
+        running: true
+        onTriggered: control.currentTime = new Date()
+    }
 
     signal incidenceActivated(var incidence, var occurrence)
     signal timeSlotActivated(var date)
@@ -37,6 +46,7 @@ Item
 
             RowLayout
             {
+                visible: control.dayCount > 1
                 Layout.fillWidth: true
                 spacing: Maui.Style.space.tiny - Maui.Style.space.tiny
 
@@ -51,36 +61,41 @@ Item
                         required property int index
                         Layout.fillWidth: true
                         Layout.minimumWidth: control.minimumDayWidth
-                        Layout.preferredHeight: Math.max(dayHeaderLabel.implicitHeight, addEventButton.implicitHeight)
-                                                + Maui.Style.space.tiny * 2
+                        Layout.preferredHeight: dayHeaderContent.implicitHeight + Maui.Style.space.tiny * 2
 
-                        Label
+                        ColumnLayout
                         {
-                            id: dayHeaderLabel
-                            anchors.fill: parent
-                            anchors.rightMargin: addEventButton.implicitWidth
+                            id: dayHeaderContent
+                            anchors.centerIn: parent
+                            spacing: Maui.Style.space.tiny
                             readonly property date headerDate: new Date(control.startDate.getFullYear(), control.startDate.getMonth(), control.startDate.getDate() + index)
-                            text: Qt.formatDate(headerDate, "ddd") + "\n" + Qt.formatDate(headerDate, "d")
-                            font.weight: Font.DemiBold
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                            background: Rectangle
-                            {
-                                visible: Qt.formatDate(dayHeaderLabel.headerDate, "yyyyMMdd") === Qt.formatDate(new Date(), "yyyyMMdd")
-                                color: Qt.alpha(Maui.Theme.highlightColor, 0.16)
-                                radius: Maui.Style.radiusV
-                            }
-                        }
 
-                        ToolButton
-                        {
-                            id: addEventButton
-                            anchors.right: parent.right
-                            anchors.verticalCenter: parent.verticalCenter
-                            icon.name: "list-add"
-                            ToolTip.visible: hovered
-                            ToolTip.text: i18n("Add event")
-                            onClicked: control.dateActivated(new Date(control.startDate.getFullYear(), control.startDate.getMonth(), control.startDate.getDate() + index))
+                            Label
+                            {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: Qt.formatDate(dayHeaderContent.headerDate, "ddd")
+                                font.weight: Font.Medium
+                                color: Maui.Theme.textColor
+                            }
+
+                            Label
+                            {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: Qt.formatDate(dayHeaderContent.headerDate, "d")
+                                font.weight: Font.DemiBold
+                                Layout.preferredWidth: Maui.Style.iconSize
+                                Layout.preferredHeight: Maui.Style.iconSize
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                                background: Rectangle
+                                {
+                                    anchors.fill: parent
+                                    visible: Qt.formatDate(dayHeaderContent.headerDate, "yyyyMMdd") === Qt.formatDate(control.currentTime, "yyyyMMdd")
+                                    radius: width / 2
+                                    color: Maui.Theme.highlightColor
+                                }
+                                color: Qt.formatDate(dayHeaderContent.headerDate, "yyyyMMdd") === Qt.formatDate(control.currentTime, "yyyyMMdd") ? Maui.Theme.highlightedTextColor : Maui.Theme.textColor
+                            }
                         }
                     }
                 }
@@ -94,18 +109,18 @@ Item
                 Item
                 {
                     Layout.preferredWidth: control.gutterWidth
-                    Layout.preferredHeight: 24 * control.hourHeight
+                    Layout.preferredHeight: 24 * control.hourHeight + Maui.Style.rowHeight / 2
 
                     Repeater
                     {
-                        model: 24
+                        model: 25
 
                         delegate: Label
                         {
                             required property int index
                             y: index * control.hourHeight - implicitHeight / 2
                             width: parent.width
-                            text: Qt.formatTime(new Date(2000, 0, 1, index), "HH:mm")
+                            text: index === 24 ? "24:00" : Qt.formatTime(new Date(2000, 0, 1, index), "HH:mm")
                             horizontalAlignment: Text.AlignRight
                             color: Maui.Theme.textColor
                         }
@@ -135,6 +150,31 @@ Item
                         }
 
                         property date dayDate: new Date(control.startDate.getFullYear(), control.startDate.getMonth(), control.startDate.getDate() + index)
+                        readonly property bool isToday: Qt.formatDate(dayDate, "yyyyMMdd") === Qt.formatDate(control.currentTime, "yyyyMMdd")
+
+                        Rectangle
+                        {
+                            id: currentTimeLine
+                            visible: dayColumn.isToday
+                            x: currentTimeDot.width / 2
+                            y: (control.currentTime.getHours() + control.currentTime.getMinutes() / 60 + control.currentTime.getSeconds() / 3600) * control.hourHeight
+                            width: parent.width - currentTimeDot.width / 2
+                            height: Maui.Style.units.smallSpacing / 2
+                            color: "#f2b8b8"
+                            z: 3
+
+                            Rectangle
+                            {
+                                id: currentTimeDot
+                                anchors.left: parent.left
+                                anchors.verticalCenter: parent.verticalCenter
+                                x: -width / 2
+                                width: Maui.Style.iconSize / 3
+                                height: width
+                                radius: width / 2
+                                color: "#f2b8b8"
+                            }
+                        }
 
                         MauiCalendar.IncidenceOccurrenceModel
                         {
