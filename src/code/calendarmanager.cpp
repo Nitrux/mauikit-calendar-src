@@ -405,10 +405,6 @@ CalendarManager::CalendarManager(QObject *parent)
     } else if (!m_storage->load()) {
         qWarning() << "Failed to load calendar from" << filePath;
     }
-    qInfo() << "[Agenda] calendar storage initialized"
-            << "path:" << filePath
-            << "opened:" << storageOpened
-            << "incidenceCount:" << m_calendar->incidences().size();
 
     bool normalizedTimes = false;
     for (const auto &incidence : m_calendar->incidences()) {
@@ -596,14 +592,9 @@ CalendarManager::CalendarManager(QObject *parent)
     m_caldavTimer->start();
     QTimer::singleShot(0, this, &CalendarManager::syncSavedCalDavAccounts);
     if (QCoreApplication::applicationName() == QStringLiteral("agenda")) {
-        const bool serviceRegistered = QDBusConnection::sessionBus().registerService(QStringLiteral("org.maui.agenda"));
-        const bool objectRegistered = serviceRegistered && QDBusConnection::sessionBus().registerObject(QStringLiteral("/Agenda"), this,
-                                                                                                         QDBusConnection::ExportScriptableSlots | QDBusConnection::ExportScriptableSignals);
-        qInfo() << "[Agenda] D-Bus calendar service registration"
-                << "service:" << serviceRegistered
-                << "object:" << objectRegistered;
-    } else {
-        qInfo() << "[Agenda] D-Bus calendar service not registered for host application:" << QCoreApplication::applicationName();
+        if (QDBusConnection::sessionBus().registerService(QStringLiteral("org.maui.agenda")))
+            QDBusConnection::sessionBus().registerObject(QStringLiteral("/Agenda"), this,
+                                                          QDBusConnection::ExportScriptableSlots | QDBusConnection::ExportScriptableSignals);
     }
     m_loading = false;
     Q_EMIT loadingChanged();
@@ -638,8 +629,6 @@ void CalendarManager::reloadCalendarIfChanged()
     m_calendar = updatedCalendar;
     m_storage = updatedStorage;
     m_calendarFileHash = fileHash;
-    qInfo() << "[Agenda] Reloaded changed calendar" << m_calendarFilePath
-            << "incidenceCount:" << m_calendar->incidences().size();
     Q_EMIT calendarChanged();
 }
 
@@ -779,20 +768,6 @@ QStringList CalendarManager::eventsForDate(const QString &date) const
     }
 
     const_cast<CalendarManager *>(this)->reloadCalendarIfChanged();
-    qInfo() << "[Agenda] eventsForDate query"
-            << "date:" << selectedDate.toString(Qt::ISODate)
-            << "calendarIncidenceCount:" << m_calendar->incidences().size();
-    for (const auto &incidence : m_calendar->incidences()) {
-        const auto event = incidence.dynamicCast<KCalendarCore::Event>();
-        if (!event) continue;
-        qInfo() << "[Agenda] eventsForDate candidate"
-                << "uid:" << event->uid()
-                << "start:" << event->dtStart()
-                << "end:" << event->dtEnd()
-                << "allDay:" << event->allDay()
-                << "recurs:" << event->recurs();
-    }
-
     const auto dayStart = QDateTime(selectedDate, QTime(0, 0), QTimeZone::systemTimeZone());
     const auto dayEnd = QDateTime(selectedDate.addDays(1), QTime(0, 0), QTimeZone::systemTimeZone());
     QStringList events;
@@ -801,10 +776,6 @@ QStringList CalendarManager::eventsForDate(const QString &date) const
         const auto key = incidence->customProperty("MauiCalendar", "CollectionId") + QLatin1Char(39) + incidence->uid() + QLatin1Char(39) + (incidence->allDay() ? start.date().toString(Qt::ISODate) : QString::number(start.toMSecsSinceEpoch()));
         if (seen.contains(key)) return;
         seen.insert(key);
-        qInfo() << "[Agenda] eventsForDate matched"
-                << "uid:" << incidence->uid()
-                << "start:" << start
-                << "end:" << end;
         QJsonObject eventData;
         eventData.insert(QStringLiteral("dateKey"), selectedDate.toString(Qt::ISODate));
         eventData.insert(QStringLiteral("start"), start.toString(Qt::ISODate));
@@ -835,7 +806,6 @@ QStringList CalendarManager::eventsForDate(const QString &date) const
             || end.toTimeZone(QTimeZone::systemTimeZone()) <= dayStart) continue;
         appendEvent(incidence, start, end);
     }
-    qInfo() << "[Agenda] eventsForDate result count:" << events.size();
     return events;
 }
 
@@ -1478,8 +1448,6 @@ void CalendarManager::save()
     }
     for (const auto &incidence : m_calendar->incidences()) normalizeIncidenceTimes(incidence);
     const bool saved = m_storage->save();
-    qInfo() << "[Agenda] Calendar persistence" << (saved ? "succeeded" : "failed")
-            << "incidenceCount:" << m_calendar->incidences().size();
     if (saved) {
         QFile file(m_calendarFilePath);
         if (file.open(QIODevice::ReadOnly))
@@ -2037,19 +2005,10 @@ bool CalendarManager::exportFile(const QString &filePath)
 
 void CalendarManager::addIncidence(IncidenceWrapper *incidenceWrapper)
 {
-    qInfo() << "[Agenda] addIncidence requested";
     if (!incidenceWrapper || !incidenceWrapper->incidencePtr()) {
         qWarning() << "[Agenda] addIncidence rejected: wrapper or incidence is null";
         return;
     }
-
-    qInfo() << "[Agenda] addIncidence fields"
-            << "uid:" << incidenceWrapper->uid()
-            << "title:" << incidenceWrapper->summary()
-            << "collectionId:" << incidenceWrapper->collectionId()
-            << "start:" << incidenceWrapper->incidenceStart()
-            << "end:" << incidenceWrapper->incidenceEnd()
-            << "allDay:" << incidenceWrapper->allDay();
 
     if (incidenceWrapper->summary().trimmed().isEmpty() || !incidenceWrapperHasValidDateRange(incidenceWrapper)) {
         qWarning() << "[Agenda] addIncidence rejected: title is empty or duration is invalid";
@@ -2064,16 +2023,8 @@ void CalendarManager::addIncidence(IncidenceWrapper *incidenceWrapper)
     KCalendarCore::Incidence::Ptr incidence(incidenceWrapper->incidencePtr()->clone());
     normalizeIncidenceTimes(incidence);
     m_calendar->addIncidence(incidence);
-    qInfo() << "[Agenda] addIncidence inserted"
-            << "uid:" << incidence->uid()
-            << "start:" << incidence->dtStart()
-            << "end:" << rawIncidenceEnd(incidence)
-            << "allDay:" << incidence->allDay()
-            << "calendarCount:" << m_calendar->incidences().size();
     save();
     Q_EMIT calendarChanged();
-    qInfo() << "[Agenda] addIncidence completed and calendarChanged emitted"
-            << "uid:" << incidence->uid();
 }
 
 void CalendarManager::editIncidence(IncidenceWrapper *incidenceWrapper, const QDateTime &occurrenceStart)
