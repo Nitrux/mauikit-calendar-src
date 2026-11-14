@@ -54,16 +54,12 @@ ComboBox
 
     displayText: _picker.selectedTime
 
-    font.bold: true
-    font.weight: Font.Bold
-    font.family: "Monospace"
-
     Maui.Controls.iconName: "clock"
 
     popupContent: MauiCalendar.TimePicker
     {
         id: _picker
-        onAccepted:
+        onAccepted: function(time)
         {
             control.timePicked(time)
             control.accepted()

@@ -51,11 +51,6 @@ Page
     
     /**
      * @brief
-     */
-    property string format: control.selectedHour < 12 ? "AM" : "PM"    
-    
-    /**
-     * @brief
      * @param time
      */
     signal accepted(var time)
@@ -71,27 +66,6 @@ Page
         {
             spacing: 0
             
-            Maui.ToolActions
-            {
-                id: _dateGroup
-                autoExclusive: true
-                
-                Action
-                {
-                    text: i18n("AM")
-                    checked: control.format === text
-                    onTriggered: control.format = text
-                }
-                
-                Action
-                {
-                    text: i18n("PM")
-                    checked: control.format === text
-                    
-                    onTriggered: control.format = text
-                }
-            }
-            
             Item {Layout.fillWidth: true}
             
             Button
@@ -99,7 +73,7 @@ Page
                 text: i18n("Done")
                 onClicked:
                 {
-                    control.updateSelectedTime(minutesTumbler.currentIndex, hoursTumbler.currentIndex, control.format)
+                    control.updateSelectedTime(minutesTumbler.currentIndex, hoursTumbler.currentIndex)
                     control.accepted(control.selectedTime)
                 }
             }
@@ -121,8 +95,8 @@ Page
                 id: hoursTumbler
                 spacing: Maui.Style.space.medium
                 
-                model: 12
-                currentIndex: formatUTCHour(control.selectedHour)                                      
+                model: 24
+                currentIndex: control.selectedHour
                 
                 delegate:  Button 
                 {
@@ -182,46 +156,6 @@ Page
     
     /**
      * @brief
-     * @param hour
-     */
-    function formatUTCHour(hour : int) : int
-    {
-        if(hour > 12)
-        {
-            return hour - 12;
-        }
-        
-        return hour
-    }
-    
-    /**
-     * @brief
-     * @param hour
-     * @param format
-     */
-    function formatHourToUTC(hour : int, format : string) : int
-    {
-        if(format == "AM")
-        {
-            if(hour >= 11)
-            {
-                return 0;
-            }
-            
-            return hour + 1
-        }
-        
-        
-        if(hour >= 11)
-        {
-            return 23
-        }
-        
-        return 12 + hour +1;
-    }
-    
-    /**
-     * @brief
      * @param count
      * @param modeldata
      */
@@ -235,12 +169,11 @@ Page
      * @brief
      * @param minute
      * @param hour
-     * @param format
      */
-    function updateSelectedTime(minute, hour, format = control.format)
+    function updateSelectedTime(minute, hour)
     {
         control.selectedMinute = minute
-        control.selectedHour = formatHourToUTC(hour, format)        
+        control.selectedHour = hour
         
         var newdate = new Date()
         
@@ -249,7 +182,7 @@ Page
         
         control.selectedTime = newdate
         
-        console.log("UPDATING TIMEW", control.selectedTime.getHours(), control.selectedTime.getMinutes(), hour, minute, format, control.selectedTime.toLocaleTimeString())
+        console.log("UPDATING TIME", control.selectedTime.getHours(), control.selectedTime.getMinutes(), hour, minute, control.selectedTime.toLocaleTimeString())
     }   
     
 }
