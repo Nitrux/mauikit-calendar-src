@@ -207,6 +207,7 @@ QQC2.Pane
 
                                         background: Rectangle
                                         {
+                                            z: -1
                                             color: {
                                                 if (root.dayCards) {
                                                     if (!gridItem.isCurrentMonth)
