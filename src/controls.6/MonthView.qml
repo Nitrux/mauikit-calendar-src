@@ -157,7 +157,7 @@ Pane
     signal dateDoubleClicked(var date)
     signal incidenceClicked(var incidence, var occurrence)
     signal incidenceRightClicked(var incidence, var occurrence, bool recurring, int collectionId, var anchor, real x, real y)
-    signal moreEventsClicked(var date)
+    signal moreEventsClicked(var date, var anchor, real x, real y)
     
     background: Rectangle
     {
@@ -272,7 +272,7 @@ Pane
                 onIncidenceClicked: function(incidence, occurrence) { control.incidenceClicked(incidence, occurrence) }
                 onDateContextRequested: function(date, anchor, x, y) { control.dateRightClicked(date); control.dateContextRequested(date, anchor, x, y) }
                 onIncidenceRightClicked: function(incidence, occurrence, recurring, collectionId, anchor, x, y) { control.incidenceRightClicked(incidence, occurrence, recurring, collectionId, anchor, x, y) }
-                onMoreEventsClicked: function(date) { control.moreEventsClicked(date) }
+                onMoreEventsClicked: function(date, anchor, x, y) { control.moreEventsClicked(date, anchor, x, y) }
                 
                 dayHeaderDelegate: ItemDelegate
                 {

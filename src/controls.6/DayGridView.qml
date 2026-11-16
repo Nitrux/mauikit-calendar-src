@@ -96,7 +96,7 @@ QQC2.Pane
     signal incidenceClicked(var incidence, var occurrence)
     signal incidenceRightClicked(var incidence, var occurrence, bool recurring, int collectionId, var anchor, real x, real y)
     signal dateContextRequested(var date, var anchor, real x, real y)
-    signal moreEventsClicked(var date)
+    signal moreEventsClicked(var date, var anchor, real x, real y)
     
     contentItem: Loader
     {
@@ -212,8 +212,6 @@ QQC2.Pane
                                                 if (root.dayCards) {
                                                     if (!gridItem.isCurrentMonth)
                                                         return "transparent"
-                                                    if (gridItem.isSelected && !gridItem.isToday)
-                                                        return Maui.Theme.highlightColor
                                                     if (gridItem.hovered && !gridItem.isToday)
                                                         return Maui.Theme.hoverColor
                                                     return Maui.Theme.alternateBackgroundColor
@@ -222,7 +220,8 @@ QQC2.Pane
                                                        gridItem.hovered ? Maui.Theme.hoverColor : "transparent"
                                             }
                                             border.color: root.dayCards && gridItem.isCurrentMonth
-                                                          ? (gridItem.isToday ? Maui.Theme.highlightColor : Maui.Theme.backgroundColor)
+                                                          ? (gridItem.isToday ? Maui.Theme.highlightColor :
+                                                             (gridItem.isSelected ? Qt.darker(Maui.Theme.textColor, 2.2) : Maui.Theme.backgroundColor))
                                                           : "transparent"
                                             border.width: root.dayCards && gridItem.isCurrentMonth ? 1 : 0
                                             radius: Maui.Style.radiusV
@@ -237,19 +236,19 @@ QQC2.Pane
                                             QQC2.Label
                                             {
                                                 id: _dateLabel
-                                                anchors.horizontalCenter: parent.horizontalCenter
-                                                anchors.verticalCenter: root.isWide ? undefined : parent.verticalCenter
-                                                anchors.top: root.isWide ? parent.top : undefined
-                                                anchors.topMargin: root.isWide ? Maui.Style.space.tiny : 0
+                                                anchors.left: root.dayCards ? parent.left : undefined
+                                                anchors.horizontalCenter: root.dayCards ? undefined : parent.horizontalCenter
+                                                anchors.verticalCenter: root.dayCards || root.isWide ? undefined : parent.verticalCenter
+                                                anchors.top: root.dayCards || root.isWide ? parent.top : undefined
+                                                anchors.topMargin: root.dayCards || root.isWide ? Maui.Style.space.tiny : 0
                                                 visible: root.showDayIndicator
                                                 text: gridItem.date.toLocaleDateString(Qt.locale(), gridItem.day == 1 && root.isWide ? "d MMM" : "d")
                                                 renderType: Text.QtRendering
-                                                horizontalAlignment: Text.AlignHCenter
+                                                horizontalAlignment: root.dayCards ? Text.AlignLeft : Text.AlignHCenter
                                                 verticalAlignment: Text.AlignVCenter
 
                                                 color: root.dayCards
-                                                       ? (gridItem.isSelected && !gridItem.isToday ? Maui.Theme.highlightedTextColor :
-                                                          (!gridItem.isCurrentMonth ? Qt.alpha(Maui.Theme.textColor, 0.5) : Maui.Theme.textColor))
+                                                       ? (!gridItem.isCurrentMonth ? Qt.alpha(Maui.Theme.textColor, 0.5) : Maui.Theme.textColor)
                                                        : (gridItem.isToday || gridItem.isSelected ? Maui.Theme.highlightedTextColor :
                                                           (!gridItem.isCurrentMonth ? Qt.alpha(Maui.Theme.textColor, 0.5) : Maui.Theme.textColor))
                                                 font.bold: root.isWide
@@ -278,6 +277,7 @@ QQC2.Pane
 
                                                     delegate: QQC2.Button
                                                     {
+                                                        id: incidenceEvent
                                                         required property string summary
                                                         required property bool allDay
                                                         required property var color
@@ -299,7 +299,7 @@ QQC2.Pane
                                                         }
                                                         Component.onDestruction: if (singleDayEvent) eventCell.singleDayEventCount--
 
-                                                        implicitWidth: Math.min(eventLabel.implicitWidth + Maui.Style.space.medium, parent.width)
+                                                        implicitWidth: Math.min(eventLabel.implicitWidth + Maui.Style.space.medium + Maui.Style.space.tiny * 1.5, parent.width)
                                                         implicitHeight: Maui.Style.rowHeight
                                                         padding: Maui.Style.space.tiny
                                                         text: summary
@@ -312,31 +312,45 @@ QQC2.Pane
                                                             onTapped: function(eventPoint) { root.incidenceRightClicked(incidencePtr, startTime, recurs, collectionId, parent, eventPoint.position.x, eventPoint.position.y) }
                                                         }
 
-                                                        contentItem: QQC2.Label
+                                                        contentItem: RowLayout
                                                         {
-                                                            id: eventLabel
-                                                            text: (allDay ? "" : Qt.formatTime(startTime, "HH:mm") + " ") + summary
-                                                            color: Maui.Theme.textColor
-                                                            elide: Text.ElideRight
+                                                            spacing: Maui.Style.space.tiny
+
+                                                            Rectangle
+                                                            {
+                                                                Layout.preferredWidth: Maui.Style.space.tiny / 2
+                                                                Layout.preferredHeight: Maui.Style.space.medium
+                                                                Layout.alignment: Qt.AlignVCenter
+                                                                radius: Maui.Style.radiusV
+                                                                color: incidenceEvent.color
+                                                            }
+
+                                                            QQC2.Label
+                                                            {
+                                                                id: eventLabel
+                                                                Layout.fillWidth: true
+                                                                text: (incidenceEvent.allDay ? "" : Qt.formatTime(incidenceEvent.startTime, "HH:mm") + " ") + incidenceEvent.summary
+                                                                color: Maui.Theme.textColor
+                                                                elide: Text.ElideRight
+                                                            }
                                                         }
 
                                                         background: Rectangle
                                                         {
                                                             radius: Maui.Style.radiusV
-                                                            color: "transparent"
-                                                            border.color: parent.color
-                                                            border.width: Maui.Style.units.smallSpacing / 2
+                                                            color: Qt.alpha(incidenceEvent.color, 0.18)
                                                         }
                                                     }
                                                 }
 
                                                 QQC2.Button
                                                 {
+                                                    id: moreEventsButton
                                                     visible: eventCell.singleDayEventCount > 2
                                                     implicitHeight: Maui.Style.rowHeight
                                                     padding: Maui.Style.space.tiny
                                                     text: i18n("+%1 more", eventCell.singleDayEventCount - 2)
-                                                    onClicked: root.moreEventsClicked(gridItem.date)
+                                                    onClicked: root.moreEventsClicked(gridItem.date, moreEventsButton, width / 2, height / 2)
 
                                                     TapHandler
                                                     {
