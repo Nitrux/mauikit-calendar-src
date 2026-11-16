@@ -233,6 +233,42 @@ QQC2.Pane
                                             clip: true
                                             property int singleDayEventCount: 0
 
+                                            function spanningCountForDate()
+                                            {
+                                                let count = 0
+                                                for (let laneIndex = 0; laneIndex < weekRow.incidences.length; laneIndex++)
+                                                {
+                                                    const lane = weekRow.incidences[laneIndex]
+                                                    for (let itemIndex = 0; itemIndex < lane.length; itemIndex++)
+                                                    {
+                                                        const incidence = lane[itemIndex]
+                                                        if (incidence.incidenceType !== MauiCalendar.IncidenceWrapper.TypeTodo
+                                                            && Number(incidence.starts) <= gridItem.index
+                                                            && gridItem.index < Number(incidence.starts) + Number(incidence.duration))
+                                                            count++
+                                                    }
+                                                }
+                                                return count
+                                            }
+
+                                            function visibleSpanningRowsForDate()
+                                            {
+                                                let rows = 0
+                                                for (let laneIndex = 0; laneIndex < Math.min(weekRow.incidences.length, 2); laneIndex++)
+                                                {
+                                                    const lane = weekRow.incidences[laneIndex]
+                                                    for (let itemIndex = 0; itemIndex < lane.length; itemIndex++)
+                                                    {
+                                                        const incidence = lane[itemIndex]
+                                                        if (incidence.incidenceType !== MauiCalendar.IncidenceWrapper.TypeTodo
+                                                            && Number(incidence.starts) <= gridItem.index
+                                                            && gridItem.index < Number(incidence.starts) + Number(incidence.duration))
+                                                            rows = laneIndex + 1
+                                                    }
+                                                }
+                                                return rows
+                                            }
+
                                             QQC2.Label
                                             {
                                                 id: _dateLabel
@@ -262,7 +298,7 @@ QQC2.Pane
                                                 anchors.right: parent.right
                                                 anchors.top: _dateLabel.bottom
                                                 anchors.bottom: parent.bottom
-                                                anchors.topMargin: Maui.Style.space.small
+                                                anchors.topMargin: Maui.Style.space.small + (root.dayCards ? eventCell.visibleSpanningRowsForDate() * Maui.Style.rowHeight : 0)
                                                 spacing: Maui.Style.space.tiny
                                                 clip: true
 
@@ -286,8 +322,9 @@ QQC2.Pane
                                                         required property var endTime
                                                         required property bool recurs
                                                         required property int collectionId
+                                                        required property int incidenceType
                                                         property int singleDayEventIndex: -1
-                                                        readonly property bool singleDayEvent: gridItem.isCurrentMonth && !allDay && startTime.toDateString() === gridItem.date.toDateString() && endTime.toDateString() === gridItem.date.toDateString()
+                                                        readonly property bool singleDayEvent: gridItem.isCurrentMonth && ((root.dayCards && incidenceType === MauiCalendar.IncidenceWrapper.TypeTodo && startTime.toDateString() === gridItem.date.toDateString()) || (!allDay && startTime.toDateString() === gridItem.date.toDateString() && endTime.toDateString() === gridItem.date.toDateString()))
 
                                                         Component.onCompleted:
                                                         {
@@ -299,11 +336,11 @@ QQC2.Pane
                                                         }
                                                         Component.onDestruction: if (singleDayEvent) eventCell.singleDayEventCount--
 
-                                                        implicitWidth: Math.min(eventLabel.implicitWidth + Maui.Style.space.medium + Maui.Style.space.tiny * 1.5, parent.width)
+                                                        implicitWidth: parent.width
                                                         implicitHeight: Maui.Style.rowHeight
                                                         padding: Maui.Style.space.tiny
                                                         text: summary
-                                                        visible: singleDayEvent && singleDayEventIndex < 2
+                                                        visible: singleDayEvent && singleDayEventIndex < Math.max(0, 2 - (root.dayCards ? eventCell.spanningCountForDate() : 0))
                                                         onClicked: root.incidenceClicked(incidencePtr, startTime)
 
                                                         TapHandler
@@ -346,10 +383,10 @@ QQC2.Pane
                                                 QQC2.Button
                                                 {
                                                     id: moreEventsButton
-                                                    visible: eventCell.singleDayEventCount > 2
+                                                    visible: eventCell.singleDayEventCount + (root.dayCards ? eventCell.spanningCountForDate() : 0) > 2
                                                     implicitHeight: Maui.Style.rowHeight
                                                     padding: Maui.Style.space.tiny
-                                                    text: i18n("+%1 more", eventCell.singleDayEventCount - 2)
+                                                    text: i18n("+%1 more", eventCell.singleDayEventCount + (root.dayCards ? eventCell.spanningCountForDate() : 0) - 2)
                                                     onClicked: root.moreEventsClicked(gridItem.date, moreEventsButton, width / 2, height / 2)
 
                                                     TapHandler
@@ -393,6 +430,7 @@ QQC2.Pane
                                     padding: Maui.Style.space.tiny
                                     text: modelData.text
                                     visible: modelData.incidencePtr !== undefined
+                                        && (!root.dayCards || (modelData.incidenceType !== MauiCalendar.IncidenceWrapper.TypeTodo && parent.index < 2))
                                     onClicked: root.incidenceClicked(modelData.incidencePtr, modelData.startTime)
 
                                     TapHandler
@@ -404,17 +442,33 @@ QQC2.Pane
                                     background: Rectangle
                                     {
                                         radius: Maui.Style.radiusV
-                                        color: "transparent"
-                                        border.color: modelData.color
-                                        border.width: Maui.Style.units.smallSpacing / 2
+                                        color: root.dayCards ? Qt.alpha(spanningEvent.modelData.color, 0.18) : "transparent"
+                                        border.color: root.dayCards ? "transparent" : spanningEvent.modelData.color
+                                        border.width: root.dayCards ? 0 : Maui.Style.units.smallSpacing / 2
                                     }
 
-                                    contentItem: QQC2.Label
+                                    contentItem: RowLayout
                                     {
-                                        text: spanningEvent.modelData.text
-                                        color: Maui.Theme.textColor
-                                        elide: Text.ElideRight
-                                        verticalAlignment: Text.AlignVCenter
+                                        spacing: Maui.Style.space.tiny
+
+                                        Rectangle
+                                        {
+                                            visible: root.dayCards
+                                            Layout.preferredWidth: Maui.Style.space.tiny / 2
+                                            Layout.preferredHeight: Maui.Style.space.medium
+                                            Layout.alignment: Qt.AlignVCenter
+                                            radius: Maui.Style.radiusV
+                                            color: spanningEvent.modelData.color
+                                        }
+
+                                        QQC2.Label
+                                        {
+                                            Layout.fillWidth: true
+                                            text: spanningEvent.modelData.text
+                                            color: Maui.Theme.textColor
+                                            elide: Text.ElideRight
+                                            verticalAlignment: Text.AlignVCenter
+                                        }
                                     }
                                 }
                             }

@@ -25,6 +25,7 @@ class CALENDAR_EXPORT IncidenceWrapper : public QObject
     QML_ELEMENT
 
     Q_PROPERTY(qint64 collectionId READ collectionId WRITE setCollectionId NOTIFY collectionIdChanged)
+    Q_PROPERTY(QString itemColor READ itemColor WRITE setItemColor NOTIFY itemColorChanged)
 
     Q_PROPERTY(KCalendarCore::Incidence::Ptr incidencePtr READ incidencePtr WRITE setIncidencePtr NOTIFY incidencePtrChanged)
     Q_PROPERTY(KCalendarCore::Incidence::Ptr originalIncidencePtr READ originalIncidencePtr NOTIFY originalIncidencePtrChanged)
@@ -112,6 +113,8 @@ public:
     QString uid() const;
     qint64 collectionId() const;
     void setCollectionId(qint64 collectionId);
+    QString itemColor() const;
+    void setItemColor(const QString &color);
     QString parent() const;
     void setParent(QString parent);
     IncidenceWrapper *parentIncidence();
@@ -200,6 +203,7 @@ Q_SIGNALS:
     void incidenceTypeStrChanged();
     void incidenceIconNameChanged();
     void collectionIdChanged();
+    void itemColorChanged();
     void parentChanged();
     void parentIncidenceChanged();
     void childIncidencesChanged();

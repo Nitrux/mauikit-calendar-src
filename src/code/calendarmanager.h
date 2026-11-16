@@ -70,6 +70,7 @@ public:
     qint64 caldavPermissionsCollectionId() const;
     KCalendarCore::MemoryCalendar::Ptr calendar() const;
     QColor collectionColor(qint64 collectionId) const;
+    QColor incidenceColor(const KCalendarCore::Incidence::Ptr &incidence) const;
     Q_INVOKABLE bool setCollectionColor(qint64 collectionId, const QColor &color);
     Q_INVOKABLE bool isCollectionReadOnly(qint64 collectionId) const;
     Q_INVOKABLE bool setCollectionReadOnly(qint64 collectionId, bool readOnly);

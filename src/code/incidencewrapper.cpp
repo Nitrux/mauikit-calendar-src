@@ -71,6 +71,7 @@ void IncidenceWrapper::notifyDataChanged()
     Q_EMIT incidenceTypeStrChanged();
     Q_EMIT incidenceIconNameChanged();
     Q_EMIT collectionIdChanged();
+    Q_EMIT itemColorChanged();
     Q_EMIT parentChanged();
     Q_EMIT parentIncidenceChanged();
     Q_EMIT childIncidencesChanged();
@@ -144,6 +145,22 @@ void IncidenceWrapper::setCollectionId(qint64 collectionId)
     m_collectionId = collectionId;
     if (m_incidence) m_incidence->setCustomProperty("MauiCalendar", "CollectionId", QString::number(collectionId));
     Q_EMIT collectionIdChanged();
+}
+
+QString IncidenceWrapper::itemColor() const
+{
+    return m_incidence->customProperty("MauiCalendar", "Color");
+}
+
+void IncidenceWrapper::setItemColor(const QString &color)
+{
+    const QColor parsedColor(color);
+    if (!color.isEmpty() && !parsedColor.isValid()) return;
+
+    const auto storedColor = color.isEmpty() ? QString() : parsedColor.name(QColor::HexRgb);
+    if (m_incidence->customProperty("MauiCalendar", "Color") == storedColor) return;
+    m_incidence->setCustomProperty("MauiCalendar", "Color", storedColor);
+    Q_EMIT itemColorChanged();
 }
 
 QString IncidenceWrapper::parent() const

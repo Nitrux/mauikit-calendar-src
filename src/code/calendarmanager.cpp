@@ -872,6 +872,7 @@ QVariantList CalendarManager::todos() const
             {QStringLiteral("allDay"), todo->allDay()},
             {QStringLiteral("completed"), todo->isCompleted()},
             {QStringLiteral("priority"), todo->priority()},
+            {QStringLiteral("color"), incidenceColor(incidence)},
             {QStringLiteral("collectionId"), todo->customProperty("MauiCalendar", "CollectionId").toLongLong()},
             {QStringLiteral("incidencePtr"), QVariant::fromValue(incidence)}
         });
@@ -898,6 +899,17 @@ QStringList CalendarManager::upcomingEvents(int days) const
 KCalendarCore::MemoryCalendar::Ptr CalendarManager::calendar() const
 {
     return m_calendar;
+}
+
+QColor CalendarManager::incidenceColor(const KCalendarCore::Incidence::Ptr &incidence) const
+{
+    if (incidence) {
+        const QColor itemColor(incidence->customProperty("MauiCalendar", "Color"));
+        if (itemColor.isValid()) return itemColor;
+        if (incidence->type() == KCalendarCore::IncidenceBase::TypeTodo) return QColor(0x7b, 0x61, 0xff);
+        return collectionColor(incidence->customProperty("MauiCalendar", "CollectionId").toLongLong());
+    }
+    return collectionColor(0);
 }
 
 QColor CalendarManager::collectionColor(qint64 collectionId) const

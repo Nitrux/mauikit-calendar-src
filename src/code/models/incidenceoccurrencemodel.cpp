@@ -146,7 +146,7 @@ void IncidenceOccurrenceModel::resetFromSource()
             occurrenceStartEnd.first,
             occurrenceStartEnd.second,
             incidence,
-            CalendarManager::instance()->collectionColor(incidence->customProperty("MauiCalendar", "CollectionId").toLongLong()),
+            CalendarManager::instance()->incidenceColor(incidence),
             incidence->customProperty("MauiCalendar", "CollectionId").toLongLong(),
             incidence->allDay(),
         };
@@ -175,7 +175,7 @@ void IncidenceOccurrenceModel::resetFromSource()
             start,
             end,
             incidence,
-            CalendarManager::instance()->collectionColor(incidence->customProperty("MauiCalendar", "CollectionId").toLongLong()),
+            CalendarManager::instance()->incidenceColor(incidence),
             incidence->customProperty("MauiCalendar", "CollectionId").toLongLong(),
             event->allDay(),
         });
