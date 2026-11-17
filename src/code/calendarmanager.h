@@ -75,13 +75,16 @@ public:
     Q_INVOKABLE bool isCollectionReadOnly(qint64 collectionId) const;
     Q_INVOKABLE bool setCollectionReadOnly(qint64 collectionId, bool readOnly);
     Q_INVOKABLE QString subscriptionForCollection(qint64 collectionId) const;
+    Q_INVOKABLE QString subscriptionName(const QString &url) const;
     KCalendarCore::Incidence::List childIncidences(const QString &uid) const;
 
     Q_INVOKABLE void save();
     Q_INVOKABLE bool importFile(const QString &filePath);
     Q_INVOKABLE bool exportFile(const QString &filePath);
+    Q_INVOKABLE bool exportFile(const QString &filePath, qint64 collectionId);
     Q_INVOKABLE void importUrl(const QString &url);
     Q_INVOKABLE void subscribeUrl(const QString &url);
+    Q_INVOKABLE bool subscribeUrl(const QString &url, const QString &displayName, const QString &username, const QString &password);
     Q_INVOKABLE void unsubscribeUrl(const QString &url);
     Q_INVOKABLE bool addCollection(const QString &name);
     Q_INVOKABLE bool removeCollection(qint64 collectionId);
@@ -127,6 +130,7 @@ private:
     void mergeCalendar(const KCalendarCore::MemoryCalendar::Ptr &source, bool preferRemote, qint64 collectionId = -1);
     bool importCalendarData(const QByteArray &data, bool preferRemote, qint64 collectionId = -1);
     void importUrl(const QString &url, qint64 collectionId);
+    void importUrl(const QString &url, qint64 collectionId, const QString &username, const QString &password);
     qint64 ensureSubscriptionCollection(const QString &url);
     qint64 ensureCalDavCollection(const QString &url);
     void saveSubscriptionMetadata() const;
@@ -167,6 +171,7 @@ private:
     QSharedPointer<QLockFile> m_reminderLock;
     QHash<QString, QByteArray> m_remoteEtags;
     QHash<QString, qint64> m_subscriptionCollectionIds;
+    QHash<QString, QVariantMap> m_subscriptionDetails;
     QSet<qint64> m_readOnlyCollections;
     QSet<qint64> m_serverReadOnlyCollections;
     QSet<QString> m_caldavDiscoveryUrls;

@@ -7,6 +7,7 @@
 #include "collection.h"
 
 #include <MauiKit4/Accounts/mauiaccounts.h>
+#include <MauiKit4/Accounts/mauisecretstore.h>
 
 #include <KCalendarCore/Event>
 #include <KCalendarCore/FileStorage>
@@ -69,6 +70,22 @@ void configureCalDavAuthentication(QNetworkAccessManager *network, const QString
     QObject::connect(network, &QNetworkAccessManager::authenticationRequired, network, [username, secret](QNetworkReply *, QAuthenticator *authenticator) {
         authenticator->setUser(username);
         authenticator->setPassword(secret);
+    });
+}
+
+void applySubscriptionAuthorization(QNetworkRequest &request, const QString &username, const QString &password)
+{
+    if (username.isEmpty() && password.isEmpty()) return;
+    const auto credentials = (username + QStringLiteral(":") + password).toUtf8().toBase64();
+    request.setRawHeader("Authorization", "Basic " + credentials);
+}
+
+void configureSubscriptionAuthentication(QNetworkAccessManager *network, const QString &username, const QString &password)
+{
+    if (!network || (username.isEmpty() && password.isEmpty())) return;
+    QObject::connect(network, &QNetworkAccessManager::authenticationRequired, network, [username, password](QNetworkReply *, QAuthenticator *authenticator) {
+        authenticator->setUser(username);
+        authenticator->setPassword(password);
     });
 }
 
@@ -432,6 +449,11 @@ CalendarManager::CalendarManager(QObject *parent)
         if (separator > 0) m_subscriptionCollectionIds.insert(entry.left(separator), entry.mid(separator + 1).toLongLong());
     }
     m_subscriptions = settings.value(QStringLiteral("Agenda/calendarSubscriptions")).toStringList();
+    for (const auto &value : settings.value(QStringLiteral("Agenda/calendarSubscriptionDetails")).toList()) {
+        const auto details = value.toMap();
+        const auto url = details.value(QStringLiteral("url")).toString();
+        if (!url.isEmpty()) m_subscriptionDetails.insert(url, details);
+    }
     for (const auto &entry : settings.value(QStringLiteral("Agenda/snoozedReminders")).toStringList()) {
         const auto separator = entry.lastIndexOf(QLatin1Char(9));
         if (separator > 0) {
@@ -954,6 +976,13 @@ bool CalendarManager::setCollectionReadOnly(qint64 collectionId, bool readOnly)
     return true;
 }
 
+QString CalendarManager::subscriptionName(const QString &url) const
+{
+    const auto collectionId = m_subscriptionCollectionIds.value(url, -1);
+    if (collectionId < 0 || collectionId >= m_collectionNames.size()) return url;
+    return m_collectionNames.at(static_cast<int>(collectionId));
+}
+
 QString CalendarManager::subscriptionForCollection(qint64 collectionId) const
 {
     for (auto it = m_subscriptionCollectionIds.cbegin(); it != m_subscriptionCollectionIds.cend(); ++it) {
@@ -1266,8 +1295,13 @@ void CalendarManager::saveSubscriptionMetadata() const
     for (auto it = m_subscriptionCollectionIds.cbegin(); it != m_subscriptionCollectionIds.cend(); ++it)
         subscriptionIds.append(it.key() + QLatin1Char(9) + QString::number(it.value()));
     QSettings settings;
+    QVariantList subscriptionDetails;
+    for (const auto &url : m_subscriptions) {
+        if (m_subscriptionDetails.contains(url)) subscriptionDetails.append(m_subscriptionDetails.value(url));
+    }
     settings.setValue(QStringLiteral("Agenda/readOnlyCollections"), readOnlyIds);
     settings.setValue(QStringLiteral("Agenda/subscriptionCollectionIds"), subscriptionIds);
+    settings.setValue(QStringLiteral("Agenda/calendarSubscriptionDetails"), subscriptionDetails);
 }
 
 void CalendarManager::saveRemoteState(const QString &url, const QSet<QString> &uids) const
@@ -1383,8 +1417,14 @@ qint64 CalendarManager::ensureCalDavCollection(const QString &url)
 
 qint64 CalendarManager::ensureSubscriptionCollection(const QString &url)
 {
+    const auto customName = m_subscriptionDetails.value(url).value(QStringLiteral("displayName")).toString().trimmed();
     if (m_subscriptionCollectionIds.contains(url) && m_subscriptionCollectionIds.value(url) < m_collectionNames.size()) {
         const auto collectionId = m_subscriptionCollectionIds.value(url);
+        if (!customName.isEmpty() && m_collectionNames.at(static_cast<int>(collectionId)) != customName) {
+            m_collectionNames[static_cast<int>(collectionId)] = customName;
+            if (m_collections && collectionId < m_collections->rowCount()) m_collections->item(static_cast<int>(collectionId))->setText(customName);
+            saveCollectionNames();
+        }
         m_readOnlyCollections.insert(collectionId);
         if (m_collections && collectionId < m_collections->rowCount())
             m_collections->item(static_cast<int>(collectionId))->setData(static_cast<int>(Collection::ReadOnly), Qt::UserRole + 3);
@@ -1393,9 +1433,10 @@ qint64 CalendarManager::ensureSubscriptionCollection(const QString &url)
 
     const QUrl parsedUrl(url);
     const auto host = parsedUrl.host().isEmpty() ? url : parsedUrl.host();
-    auto name = i18n("Subscription: %1", host);
+    const auto baseName = customName.isEmpty() ? i18n("Subscription: %1", host) : customName;
+    auto name = baseName;
     for (int suffix = 2; m_collectionNames.contains(name, Qt::CaseInsensitive); ++suffix)
-        name = i18n("Subscription: %1 (%2)", host, suffix);
+        name = i18n("%1 (%2)", baseName, suffix);
 
     const auto collectionId = m_collectionNames.size();
     m_collectionNames.append(name);
@@ -1647,12 +1688,27 @@ void CalendarManager::importUrl(const QString &urlString)
 
 void CalendarManager::importUrl(const QString &urlString, qint64 collectionId)
 {
+    const auto details = m_subscriptionDetails.value(urlString);
+    const auto username = details.value(QStringLiteral("username")).toString();
+    QString password;
+    if (details.value(QStringLiteral("hasPassword")).toBool()) {
+        const auto secret = MauiSecretStore::instance()->find(QStringLiteral("maui-agenda"), QStringLiteral("ical-password"), {{QStringLiteral("resource"), urlString}, {QStringLiteral("username"), username}});
+        password = secret.value(QStringLiteral("secret")).toString();
+    }
+    importUrl(urlString, collectionId, username, password);
+}
+
+void CalendarManager::importUrl(const QString &urlString, qint64 collectionId, const QString &username, const QString &password)
+{
     auto url = QUrl(urlString);
     if (url.scheme() == QStringLiteral("webcal")) url.setScheme(QStringLiteral("https"));
     if (!url.isValid() || url.scheme().isEmpty()) return;
 
     auto *network = new QNetworkAccessManager(this);
-    auto *reply = network->get(QNetworkRequest(url));
+    configureSubscriptionAuthentication(network, username, password);
+    QNetworkRequest request(url);
+    applySubscriptionAuthorization(request, username, password);
+    auto *reply = network->get(request);
     connect(reply, &QNetworkReply::finished, this, [this, reply, network, collectionId] {
         const auto data = reply->readAll();
         if (reply->error() == QNetworkReply::NoError && !data.isEmpty()) {
@@ -1667,13 +1723,33 @@ void CalendarManager::importUrl(const QString &urlString, qint64 collectionId)
 
 void CalendarManager::subscribeUrl(const QString &url)
 {
+    subscribeUrl(url, {}, {}, {});
+}
+
+bool CalendarManager::subscribeUrl(const QString &url, const QString &displayName, const QString &username, const QString &password)
+{
     const auto normalizedUrl = url.trimmed();
-    if (normalizedUrl.isEmpty() || m_subscriptions.contains(normalizedUrl)) return;
+    QUrl parsedUrl(normalizedUrl);
+    if (parsedUrl.scheme() == QStringLiteral("webcal")) parsedUrl.setScheme(QStringLiteral("https"));
+    if (normalizedUrl.isEmpty() || !parsedUrl.isValid() || (parsedUrl.scheme() != QStringLiteral("https") && parsedUrl.scheme() != QStringLiteral("http")) || parsedUrl.host().isEmpty()) return false;
+    if (m_subscriptions.contains(normalizedUrl)) return true;
+
+    QVariantMap details {
+        {QStringLiteral("url"), normalizedUrl},
+        {QStringLiteral("displayName"), displayName.trimmed()},
+        {QStringLiteral("username"), username.trimmed()},
+        {QStringLiteral("hasPassword"), !password.isEmpty()}
+    };
+    if (!password.isEmpty() && !MauiSecretStore::instance()->save(QStringLiteral("maui-agenda"), QStringLiteral("ical-password"), {{QStringLiteral("resource"), normalizedUrl}, {QStringLiteral("username"), username.trimmed()}}, password)) return false;
+
+    m_subscriptionDetails.insert(normalizedUrl, details);
     const auto collectionId = ensureSubscriptionCollection(normalizedUrl);
     m_subscriptions.append(normalizedUrl);
     QSettings().setValue(QStringLiteral("Agenda/calendarSubscriptions"), m_subscriptions);
+    saveSubscriptionMetadata();
     Q_EMIT subscriptionsChanged();
-    importUrl(normalizedUrl, collectionId);
+    importUrl(normalizedUrl, collectionId, username.trimmed(), password);
+    return true;
 }
 
 void CalendarManager::unsubscribeUrl(const QString &url)
@@ -1683,6 +1759,9 @@ void CalendarManager::unsubscribeUrl(const QString &url)
 
     const auto hasCollection = m_subscriptionCollectionIds.contains(normalizedUrl);
     const auto collectionId = m_subscriptionCollectionIds.take(normalizedUrl);
+    const auto details = m_subscriptionDetails.take(normalizedUrl);
+    if (details.value(QStringLiteral("hasPassword")).toBool())
+        MauiSecretStore::instance()->remove(QStringLiteral("maui-agenda"), QStringLiteral("ical-password"), {{QStringLiteral("resource"), normalizedUrl}, {QStringLiteral("username"), details.value(QStringLiteral("username")).toString()}});
     m_readOnlyCollections.remove(collectionId);
     if (hasCollection && collectionId >= 0) {
         for (const auto &incidence : m_calendar->incidences()) {
@@ -2039,12 +2118,20 @@ void CalendarManager::syncCalDavEndpoint(const QString &urlString, const QString
 
 bool CalendarManager::exportFile(const QString &filePath)
 {
+    return exportFile(filePath, -1);
+}
+
+bool CalendarManager::exportFile(const QString &filePath, qint64 collectionId)
+{
     if (filePath.isEmpty()) {
         return false;
     }
 
     const auto exportedCalendar = QSharedPointer<KCalendarCore::MemoryCalendar>::create(QTimeZone::systemTimeZone());
     for (const auto &incidence : m_calendar->incidences()) {
+        if (collectionId >= 0 && incidence->customProperty("MauiCalendar", "CollectionId").toLongLong() != collectionId) {
+            continue;
+        }
         exportedCalendar->addIncidence(incidenceForSerialization(incidence));
     }
     KCalendarCore::FileStorage exportedStorage(exportedCalendar, filePath);
