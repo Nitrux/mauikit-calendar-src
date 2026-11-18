@@ -327,7 +327,9 @@ bool IncidenceOccurrenceModel::incidencePassesFilter(const KCalendarCore::Incide
     if (!mFilter->name().isEmpty() && !incidence->summary().contains(mFilter->name(), Qt::CaseInsensitive)) {
         return false;
     }
-    if (mFilter->collectionIds().contains(incidence->customProperty("MauiCalendar", "CollectionId"))) {
+    auto collectionId = incidence->customProperty("MauiCalendar", "CollectionId");
+    if (collectionId.isEmpty()) collectionId = QStringLiteral("0");
+    if (mFilter->collectionIds().contains(collectionId)) {
         return false;
     }
     return true;

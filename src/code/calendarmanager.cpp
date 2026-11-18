@@ -462,6 +462,9 @@ CalendarManager::CalendarManager(QObject *parent)
         }
     }
     m_caldavUrls = settings.value(QStringLiteral("Agenda/caldavUrls")).toStringList();
+    const auto accountCalendars = settings.value(QStringLiteral("Agenda/caldavAccountCalendars")).toMap();
+    for (auto it = accountCalendars.cbegin(); it != accountCalendars.cend(); ++it)
+        m_caldavAccountCalendars.insert(it.key(), it.value().toStringList());
     for (const auto &entry : settings.value(QStringLiteral("Agenda/calendarColors")).toStringList()) {
         const auto separator = entry.indexOf(QLatin1Char(9));
         if (separator > 0) {
@@ -483,18 +486,31 @@ CalendarManager::CalendarManager(QObject *parent)
         }
         if (!found) MauiAccounts::instance()->saveCalDavAccount(account);
     }
-    for (const auto &url : std::as_const(m_caldavUrls)) {
-        bool found = false;
-        for (const auto &storedValue : std::as_const(m_caldavAccounts)) {
-            if (storedValue.toMap().value(QStringLiteral("url")).toString() == url) {
-                found = true;
-                break;
+    if (!settings.value(QStringLiteral("Agenda/caldavUrlsMigrated"), false).toBool()
+        && !settings.contains(QStringLiteral("Agenda/caldavCollectionIds"))) {
+        for (const auto &url : std::as_const(m_caldavUrls)) {
+            bool found = false;
+            for (const auto &storedValue : std::as_const(m_caldavAccounts)) {
+                if (storedValue.toMap().value(QStringLiteral("url")).toString() == url) {
+                    found = true;
+                    break;
+                }
             }
+            if (!found) MauiAccounts::instance()->saveCalDavAccount(QVariantMap{{QStringLiteral("url"), url}, {QStringLiteral("enabled"), true}});
         }
-        if (!found) MauiAccounts::instance()->saveCalDavAccount(QVariantMap{{QStringLiteral("url"), url}, {QStringLiteral("enabled"), true}});
     }
+    settings.setValue(QStringLiteral("Agenda/caldavUrlsMigrated"), true);
     if (!legacyCaldavAccounts.isEmpty()) settings.remove(QStringLiteral("Agenda/caldavAccounts"));
     m_caldavAccounts = MauiAccounts::instance()->caldavAccountsData();
+    const auto caldavCollectionIds = settings.value(QStringLiteral("Agenda/caldavCollectionIds")).toMap();
+    for (auto &accountValue : m_caldavAccounts) {
+        auto account = accountValue.toMap();
+        const auto url = account.value(QStringLiteral("url")).toString();
+        if (caldavCollectionIds.contains(url)) {
+            account.insert(QStringLiteral("collectionId"), caldavCollectionIds.value(url));
+            accountValue = account;
+        }
+    }
     for (const auto &account : std::as_const(m_caldavAccounts)) {
         const auto url = account.toMap().value(QStringLiteral("url")).toString();
         if (!url.isEmpty() && !m_caldavUrls.contains(url)) m_caldavUrls.append(url);
@@ -541,13 +557,25 @@ CalendarManager::CalendarManager(QObject *parent)
             }
             accounts.append(account);
         }
+        for (const auto &previousValue : std::as_const(m_caldavAccounts)) {
+            const auto url = previousValue.toMap().value(QStringLiteral("url")).toString();
+            const auto stillExists = std::any_of(accounts.cbegin(), accounts.cend(), [&url](const QVariant &value) {
+                return value.toMap().value(QStringLiteral("url")).toString() == url;
+            });
+            if (!stillExists) {
+                m_caldavUrls.removeAll(url);
+                const auto endpoints = m_caldavAccountCalendars.take(url);
+                auto collectionIds = QSettings().value(QStringLiteral("Agenda/caldavCollectionIds")).toMap();
+                for (const auto &endpoint : endpoints) collectionIds.remove(endpoint);
+                QSettings().setValue(QStringLiteral("Agenda/caldavCollectionIds"), collectionIds);
+            }
+        }
         m_caldavAccounts = accounts;
         for (const auto &accountValue : std::as_const(m_caldavAccounts)) {
             const auto account = accountValue.toMap();
             const auto url = account.value(QStringLiteral("url")).toString();
             if (!url.isEmpty() && !m_caldavUrls.contains(url)) m_caldavUrls.append(url);
         }
-        bool collectionChanged = false;
         for (int i = 0; i < m_caldavAccounts.size(); ++i) {
             auto account = m_caldavAccounts.at(i).toMap();
             auto collectionId = account.value(QStringLiteral("collectionId"), -1).toLongLong();
@@ -555,10 +583,9 @@ CalendarManager::CalendarManager(QObject *parent)
                 collectionId = ensureCalDavCollection(account.value(QStringLiteral("url")).toString());
                 account.insert(QStringLiteral("collectionId"), collectionId);
                 m_caldavAccounts[i] = account;
-                collectionChanged = true;
             }
         }
-        if (collectionChanged) saveCalDavAccounts();
+        saveCalDavAccounts();
         syncSavedCalDavAccounts();
     });
 
@@ -680,6 +707,13 @@ bool CalendarManager::loading() const
 QAbstractItemModel *CalendarManager::collections()
 {
     return m_collections;
+}
+
+QStringList CalendarManager::collectionIds() const
+{
+    QStringList ids;
+    for (int i = 0; i < m_collectionNames.size(); ++i) ids.append(QString::number(i));
+    return ids;
 }
 
 QStringList CalendarManager::subscriptions() const
@@ -1195,6 +1229,14 @@ void CalendarManager::saveCalDavAccounts()
     m_syncingAccounts = false;
 
     QSettings settings;
+    auto collectionIds = settings.value(QStringLiteral("Agenda/caldavCollectionIds")).toMap();
+    for (const auto &accountValue : std::as_const(m_caldavAccounts)) {
+        const auto account = accountValue.toMap();
+        const auto url = account.value(QStringLiteral("url")).toString();
+        const auto collectionId = account.value(QStringLiteral("collectionId"), -1).toLongLong();
+        if (!url.isEmpty() && collectionId >= 0) collectionIds.insert(url, collectionId);
+    }
+    settings.setValue(QStringLiteral("Agenda/caldavCollectionIds"), collectionIds);
     settings.setValue(QStringLiteral("Agenda/caldavUrls"), m_caldavUrls);
     settings.remove(QStringLiteral("Agenda/caldavAccounts"));
 }
@@ -1217,7 +1259,21 @@ void CalendarManager::syncCalDavAccount(const QVariantMap &account)
     if (url.isEmpty()) return;
     const auto authType = account.value(QStringLiteral("authType"), QStringLiteral("basic")).toString();
     if (authType != QStringLiteral("bearer")) {
-        syncCalDav(url, account.value(QStringLiteral("username")).toString(), calDavCredential(account), account.value(QStringLiteral("collectionId"), -1).toLongLong());
+        const auto username = account.value(QStringLiteral("username")).toString();
+        const auto password = calDavCredential(account);
+        auto endpoints = m_caldavAccountCalendars.value(url);
+        if (endpoints.isEmpty() || (endpoints.size() == 1 && endpoints.constFirst() == url)) {
+            m_caldavAccountCalendars.remove(url);
+            QVariantMap accountCalendars;
+            for (auto it = m_caldavAccountCalendars.cbegin(); it != m_caldavAccountCalendars.cend(); ++it)
+                accountCalendars.insert(it.key(), it.value());
+            QSettings().setValue(QStringLiteral("Agenda/caldavAccountCalendars"), accountCalendars);
+            syncCalDav(url, username, password, account.value(QStringLiteral("collectionId"), -1).toLongLong());
+        } else {
+            const auto collectionIds = QSettings().value(QStringLiteral("Agenda/caldavCollectionIds")).toMap();
+            for (const auto &endpoint : endpoints)
+                syncCalDavEndpoint(endpoint, username, password, collectionIds.value(endpoint, -1).toLongLong());
+        }
         return;
     }
     const auto token = account.value(QStringLiteral("password")).toString();
@@ -1249,6 +1305,15 @@ void CalendarManager::refreshCalDavToken(const QVariantMap &account)
     request.setHeader(QNetworkRequest::ContentTypeHeader, QStringLiteral("application/x-www-form-urlencoded"));
     auto *reply = network->post(request, query.query(QUrl::FullyEncoded).toUtf8());
     connect(reply, &QNetworkReply::finished, this, [this, reply, network, account] {
+        const auto accountUrl = account.value(QStringLiteral("url")).toString();
+        const auto accountExists = std::any_of(m_caldavAccounts.cbegin(), m_caldavAccounts.cend(), [&accountUrl](const QVariant &value) {
+            return value.toMap().value(QStringLiteral("url")).toString() == accountUrl;
+        });
+        if (!accountExists) {
+            reply->deleteLater();
+            network->deleteLater();
+            return;
+        }
         const auto data = reply->readAll();
         const auto status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
         const auto object = QJsonDocument::fromJson(data).object();
@@ -1513,6 +1578,15 @@ bool CalendarManager::removeCollection(qint64 collectionId)
         shiftedSubscriptions.insert(it.key(), it.value() > collectionId ? it.value() - 1 : it.value());
     m_subscriptionCollectionIds = shiftedSubscriptions;
 
+    for (auto &accountValue : m_caldavAccounts) {
+        auto account = accountValue.toMap();
+        const auto id = account.value(QStringLiteral("collectionId"), -1).toLongLong();
+        if (id > collectionId) {
+            account.insert(QStringLiteral("collectionId"), id - 1);
+            accountValue = account;
+        }
+    }
+    saveCalDavAccounts();
     saveCollectionNames();
     saveCollectionColors();
     saveSubscriptionMetadata();
@@ -1552,7 +1626,7 @@ void CalendarManager::save()
     }
 }
 
-void CalendarManager::mergeCalendar(const KCalendarCore::MemoryCalendar::Ptr &source, bool preferRemote, qint64 collectionId)
+void CalendarManager::mergeCalendar(const KCalendarCore::MemoryCalendar::Ptr &source, bool preferRemote, qint64 collectionId, bool replaceCollection)
 {
     bool changed = false;
     QSet<QString> incomingUids;
@@ -1589,7 +1663,7 @@ void CalendarManager::mergeCalendar(const KCalendarCore::MemoryCalendar::Ptr &so
         }
     }
 
-    if (collectionId >= 0) {
+    if (collectionId >= 0 && replaceCollection) {
         const auto existingIncidences = m_calendar->incidences();
         for (const auto &existing : existingIncidences) {
             if (existing->customProperty("MauiCalendar", "CollectionId").toLongLong() == collectionId && !incomingUids.contains(existing->uid())) {
@@ -1605,7 +1679,7 @@ void CalendarManager::mergeCalendar(const KCalendarCore::MemoryCalendar::Ptr &so
     }
 }
 
-bool CalendarManager::importCalendarData(const QByteArray &data, bool preferRemote, qint64 collectionId)
+bool CalendarManager::importCalendarData(const QByteArray &data, bool preferRemote, qint64 collectionId, bool replaceCollection)
 {
     if (data.isEmpty()) return false;
     QTemporaryFile file(QDir::tempPath() + QStringLiteral("/agenda-XXXXXX.ics"));
@@ -1617,7 +1691,7 @@ bool CalendarManager::importCalendarData(const QByteArray &data, bool preferRemo
     const auto importedCalendar = QSharedPointer<KCalendarCore::MemoryCalendar>::create(QTimeZone::systemTimeZone());
     KCalendarCore::FileStorage importedStorage(importedCalendar, path);
     const bool loaded = importedStorage.open() && importedStorage.load();
-    if (loaded) mergeCalendar(importedCalendar, preferRemote, collectionId);
+    if (loaded) mergeCalendar(importedCalendar, preferRemote, collectionId, replaceCollection);
     QFile::remove(path);
     return loaded;
 }
@@ -1723,16 +1797,29 @@ void CalendarManager::importUrl(const QString &urlString, qint64 collectionId, c
 
 void CalendarManager::subscribeUrl(const QString &url)
 {
-    subscribeUrl(url, {}, {}, {});
+    subscribeUrlWithDetails(url, {}, {}, {});
 }
 
-bool CalendarManager::subscribeUrl(const QString &url, const QString &displayName, const QString &username, const QString &password)
+bool CalendarManager::subscribeUrlWithDetails(const QString &url, const QString &displayName, const QString &username, const QString &password)
 {
     const auto normalizedUrl = url.trimmed();
     QUrl parsedUrl(normalizedUrl);
     if (parsedUrl.scheme() == QStringLiteral("webcal")) parsedUrl.setScheme(QStringLiteral("https"));
     if (normalizedUrl.isEmpty() || !parsedUrl.isValid() || (parsedUrl.scheme() != QStringLiteral("https") && parsedUrl.scheme() != QStringLiteral("http")) || parsedUrl.host().isEmpty()) return false;
-    if (m_subscriptions.contains(normalizedUrl)) return true;
+    if (m_subscriptions.contains(normalizedUrl)) {
+        if (!displayName.trimmed().isEmpty()) {
+            auto details = m_subscriptionDetails.value(normalizedUrl);
+            details.insert(QStringLiteral("url"), normalizedUrl);
+            details.insert(QStringLiteral("displayName"), displayName.trimmed());
+            if (!details.contains(QStringLiteral("username"))) details.insert(QStringLiteral("username"), username.trimmed());
+            if (!details.contains(QStringLiteral("hasPassword"))) details.insert(QStringLiteral("hasPassword"), !password.isEmpty());
+            m_subscriptionDetails.insert(normalizedUrl, details);
+            ensureSubscriptionCollection(normalizedUrl);
+            saveSubscriptionMetadata();
+            Q_EMIT subscriptionsChanged();
+        }
+        return true;
+    }
 
     QVariantMap details {
         {QStringLiteral("url"), normalizedUrl},
@@ -1870,7 +1957,7 @@ void CalendarManager::syncCalDav(const QString &urlString, const QString &userna
 {
     const QUrl url(urlString);
     const auto path = url.path();
-    if (url.isValid() && (path.isEmpty() || path == QStringLiteral("/")) && !m_caldavDiscoveryUrls.contains(urlString)) {
+    if (url.isValid() && !m_caldavAccountCalendars.contains(urlString) && !m_caldavDiscoveryUrls.contains(urlString)) {
         m_caldavDiscoveryUrls.insert(urlString);
         startCalDavDiscovery(urlString, urlString, username, password, collectionId);
         return;
@@ -1895,6 +1982,15 @@ void CalendarManager::startCalDavDiscovery(const QString &requestUrl, const QStr
     configureCalDavAuthentication(network, username, password);
     auto *reply = network->sendCustomRequest(request, QByteArrayLiteral("PROPFIND"), propfind);
     connect(reply, &QNetworkReply::finished, this, [this, reply, network, url, originalUrl, username, password, collectionId] {
+        const auto accountExists = std::any_of(m_caldavAccounts.cbegin(), m_caldavAccounts.cend(), [&originalUrl](const QVariant &value) {
+            return value.toMap().value(QStringLiteral("url")).toString() == originalUrl;
+        });
+        if (!accountExists) {
+            m_caldavDiscoveryUrls.remove(originalUrl);
+            reply->deleteLater();
+            network->deleteLater();
+            return;
+        }
         const auto result = parseCalDavDiscovery(reply->readAll(), url);
         if (result.calendars.isEmpty() && result.calendarHome.isValid() && result.calendarHome != url) {
             const auto homeUrl = result.calendarHome.toString(QUrl::FullyEncoded);
@@ -1913,28 +2009,33 @@ void CalendarManager::startCalDavDiscovery(const QString &requestUrl, const QStr
 
         auto discoveredUrls = result.calendars;
         if (discoveredUrls.isEmpty() && result.calendarHome.isValid()) discoveredUrls.append(result.calendarHome.toString(QUrl::FullyEncoded));
-        if (discoveredUrls.isEmpty()) discoveredUrls.append(originalUrl);
-        const auto primaryUrl = discoveredUrls.constFirst();
-        if (primaryUrl != originalUrl) {
-            for (auto &stored : m_caldavAccounts) {
-                auto account = stored.toMap();
-                if (account.value(QStringLiteral("url")).toString() == originalUrl) {
-                    account.insert(QStringLiteral("url"), primaryUrl);
-                    stored = account;
-                    break;
-                }
-            }
-            m_caldavUrls.removeAll(originalUrl);
+        if (discoveredUrls.isEmpty()) {
+            m_caldavDiscoveryUrls.remove(originalUrl);
+            reply->deleteLater();
+            network->deleteLater();
+            return;
         }
-        for (const auto &endpoint : discoveredUrls) {
+        m_caldavAccountCalendars.insert(originalUrl, discoveredUrls);
+        auto collectionIds = QSettings().value(QStringLiteral("Agenda/caldavCollectionIds")).toMap();
+        for (int index = 0; index < discoveredUrls.size(); ++index) {
+            const auto &endpoint = discoveredUrls.at(index);
             if (!m_caldavUrls.contains(endpoint)) m_caldavUrls.append(endpoint);
+            if (!collectionIds.contains(endpoint)) {
+                const auto existingCollectionId = index == 0 ? collectionId : -1;
+                collectionIds.insert(endpoint, existingCollectionId >= 0 ? existingCollectionId : ensureCalDavCollection(endpoint));
+            }
         }
+        QVariantMap accountCalendars;
+        for (auto it = m_caldavAccountCalendars.cbegin(); it != m_caldavAccountCalendars.cend(); ++it)
+            accountCalendars.insert(it.key(), it.value());
+        QSettings().setValue(QStringLiteral("Agenda/caldavAccountCalendars"), accountCalendars);
+        QSettings().setValue(QStringLiteral("Agenda/caldavCollectionIds"), collectionIds);
         saveCalDavAccounts();
         m_caldavDiscoveryUrls.remove(originalUrl);
         reply->deleteLater();
         network->deleteLater();
-        for (int i = 0; i < discoveredUrls.size(); ++i)
-            syncCalDavEndpoint(discoveredUrls.at(i), username, password, i == 0 ? collectionId : -1);
+        for (const auto &endpoint : discoveredUrls)
+            syncCalDavEndpoint(endpoint, username, password, collectionIds.value(endpoint, -1).toLongLong());
     });
 }
 
@@ -1976,11 +2077,7 @@ void CalendarManager::syncCalDavEndpoint(const QString &urlString, const QString
             break;
         }
     }
-    if (!accountFound) {
-        if (collectionId < 0) collectionId = ensureCalDavCollection(urlString);
-        m_caldavAccounts.append(QVariantMap{{QStringLiteral("url"), urlString}, {QStringLiteral("username"), username}, {QStringLiteral("password"), storedSecret}, {QStringLiteral("authType"), authType}, {QStringLiteral("enabled"), true}, {QStringLiteral("collectionId"), collectionId}});
-        accountChanged = true;
-    }
+    if (!accountFound && collectionId < 0) collectionId = ensureCalDavCollection(urlString);
     const bool urlAdded = !m_caldavUrls.contains(urlString);
     if (urlAdded) m_caldavUrls.append(urlString);
     if (accountChanged || urlAdded) {
@@ -1993,13 +2090,22 @@ void CalendarManager::syncCalDavEndpoint(const QString &urlString, const QString
     request.setRawHeader("Content-Type", "application/xml; charset=utf-8");
     request.setRawHeader("Accept", "text/calendar, application/xml");
     applyCalDavAuthorization(request, username, password);
-    const QByteArray report = QByteArrayLiteral("<?xml version=\"1.0\" encoding=\"utf-8\" ?><c:calendar-query xmlns:c=\"urn:ietf:params:xml:ns:caldav\" xmlns:d=\"DAV:\"><d:prop><d:getetag/><d:current-user-privilege-set/><c:calendar-data/></d:prop><c:filter><c:comp-filter name=\"VCALENDAR\"><c:comp-filter name=\"VEVENT\"/></c:comp-filter></c:filter></c:calendar-query>");
+    const QByteArray report = QByteArrayLiteral("<?xml version=\"1.0\" encoding=\"utf-8\" ?><c:calendar-query xmlns:c=\"urn:ietf:params:xml:ns:caldav\" xmlns:d=\"DAV:\"><d:prop><d:getetag/><d:current-user-privilege-set/><c:calendar-data/></d:prop><c:filter><c:comp-filter name=\"VCALENDAR\"/></c:filter></c:calendar-query>");
 
     auto *network = new QNetworkAccessManager(this);
     configureCalDavAuthentication(network, username, password);
     const bool resourceUrl = url.path().endsWith(QStringLiteral(".ics"));
     auto *reply = resourceUrl ? network->get(request) : network->sendCustomRequest(request, QByteArrayLiteral("REPORT"), report);
     connect(reply, &QNetworkReply::finished, this, [this, reply, network, urlString, username, password, resourceUrl, collectionId] {
+        const auto accountExists = std::any_of(m_caldavAccounts.cbegin(), m_caldavAccounts.cend(), [this, &urlString](const QVariant &value) {
+            const auto accountUrl = value.toMap().value(QStringLiteral("url")).toString();
+            return accountUrl == urlString || m_caldavAccountCalendars.value(accountUrl).contains(urlString);
+        });
+        if (!accountExists) {
+            reply->deleteLater();
+            network->deleteLater();
+            return;
+        }
         const auto data = reply->readAll();
         const auto status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
         const bool success = reply->error() == QNetworkReply::NoError && status < 400;
@@ -2053,7 +2159,7 @@ void CalendarManager::syncCalDavEndpoint(const QString &urlString, const QString
                     } else if (xml.isEndElement()) {
                         if (xml.name() == QLatin1String("calendar-data")) {
                             if (calendarData.contains("BEGIN:VCALENDAR")) {
-                                parsed = importCalendarData(calendarData, true, collectionId) || parsed;
+                                parsed = importCalendarData(calendarData, true, collectionId, false) || parsed;
                                 const auto uids = calendarUids(calendarData);
                                 const auto remoteIncidences = calendarIncidences(calendarData);
                                 for (const auto &incidence : remoteIncidences) {
