@@ -142,7 +142,7 @@ private:
     void syncSavedCalDavAccounts();
     void syncCalDavAccount(const QVariantMap &account);
     void refreshCalDavToken(const QVariantMap &account);
-    void startCalDavDiscovery(const QString &requestUrl, const QString &originalUrl, const QString &username, const QString &password, qint64 collectionId);
+    void startCalDavDiscovery(const QString &requestUrl, const QString &originalUrl, const QString &username, const QString &password, qint64 collectionId, const QStringList &attemptedUrls = {});
     void syncCalDavEndpoint(const QString &url, const QString &username, const QString &password, qint64 collectionId);
     void setServerCollectionReadOnly(qint64 collectionId, bool readOnly);
     void saveSnoozedReminders() const;
